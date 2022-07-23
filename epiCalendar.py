@@ -23,11 +23,6 @@ enableLocationParsing = True
 enableExperimentalLocationParsing = True
 enableClassTypeParsing = True
 
-
-def invalidChar():
-    print("× (Invalid JSESSIONID)")
-    exit(1)
-
 # Function to send the first GET HTTP request using the tokens provided.
 def getFirstRequest(session_token):
 
@@ -202,6 +197,8 @@ def createCsv(rawResponse):
     print("✓ (%.3fs)" % (time.time() - initTime))
 
 def verifyCookie(jsessionid) -> bool:
+    if jsessionid is None: return False
+    if jsessionid == "0000XXXXXXXXXXXXXXXXXXXXXXX:1dXXXXXXX": return False
     if len(jsessionid) != 37: return False
     for i in range(4):
         if jsessionid[i] != "0": return False
@@ -232,12 +229,10 @@ def main(argv) -> int:
         except (KeyboardInterrupt, EOFError):
             exit(0)
 
-    # Cookie verification.
-    if (len(session)) != 37: invalidChar()
-    for i in range(4):
-        if session[i] != "0": invalidChar()
-    if session[27] != ":" or session[28] != "1" or session[29] != "d":
-        invalidChar()
+    # If the JSESSIONID is not valid, exit.
+    if not verifyCookie(session):
+        print("× Invalid JSESSIONID.")
+        exit(1)
 
     startTime = time.time()
     cookies = extractCookies(getFirstRequest(session))
@@ -246,4 +241,5 @@ def main(argv) -> int:
     return 0
 
 if __name__ == "__main__":
+    print(sys.argv)
     sys.exit(main(sys.argv))
