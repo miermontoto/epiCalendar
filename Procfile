@@ -1,2 +1,1 @@
-web: npm run linux-start
-web: gunicorn run:app
+web: sh script.sh
