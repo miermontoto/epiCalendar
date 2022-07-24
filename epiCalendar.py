@@ -232,6 +232,7 @@ def main(argv) -> int:
     cookies = extractCookies(getFirstRequest(session))
     createCsv(postCalendarRequest(session, "true", cookies[0], cookies[1], "1630886400000", "1652054400000", cookies[2]))
     print("\nCalendar generated, took %.3fs" % (time.time() - startTime))
+    print("Saved as \"%s\"" % csvFile)
     return 0
 
 if __name__ == "__main__":
