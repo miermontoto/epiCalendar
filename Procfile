@@ -1,2 +1,2 @@
 web: npm run start-api
-web: npm run start-linux
+web: npm run linux-start
