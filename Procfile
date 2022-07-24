@@ -1,2 +1,2 @@
 web: npm run linux-start
-web: npm run start-api
+web: gunicorn run:app
