@@ -1,1 +1,1 @@
-web: npm run start
+web: sh script.sh
