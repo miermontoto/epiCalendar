@@ -241,5 +241,4 @@ def main(argv) -> int:
     return 0
 
 if __name__ == "__main__":
-    print(sys.argv)
     sys.exit(main(sys.argv))
