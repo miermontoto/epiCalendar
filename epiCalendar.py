@@ -7,6 +7,7 @@ import sys
 import urllib.parse
 import os
 import time
+import utils
 
 # Declare global variables.
 url = 'https://sies.uniovi.es/serviciosacademicos/web/expedientes/calendario.xhtml'
@@ -24,9 +25,6 @@ enableExperimentalLocationParsing = True
 enableClassTypeParsing = True
 
 
-def invalidChar():
-    print("× (Invalid JSESSIONID)")
-    exit(1)
 
 # Function to send the first GET HTTP request using the tokens provided.
 def getFirstRequest(session_token):
@@ -201,28 +199,22 @@ def createCsv(rawResponse):
     g.close()
     print("✓ (%.3fs)" % (time.time() - initTime))
 
-def verifyCookie(jsessionid) -> bool:
-    if len(jsessionid) != 37: return False
-    for i in range(4):
-        if jsessionid[i] != "0": return False
-    if jsessionid[27] != ":" or jsessionid[28] != "1" or jsessionid[29] != "d":
-        return False
-    return True
 
-if __name__ == "__main__":
+def main(argv) -> int:
+    global enableLocationParsing, enableClassTypeParsing, enableExperimentalLocationParsing, csvFile
     session = ""
 
     # Read flags from arguments.
-    if not len(sys.argv) == 1 and (sys.argv[1] == "--help" or sys.argv[1] == "-h"):
+    if not len(argv) == 1 and (argv[1] == "--help" or argv[1] == "-h"):
         print("Usage: python3 epiCalendar.py [JSESSIONID] [-o | --output-file <filename>] [--disable-location-parsing] [--disable-class-type-parsing] [--disable-experimental-location-parsing]")
         exit(0)
 
-    for i in range(1, len(sys.argv)):
-        if sys.argv[i] == "--disable-location-parsing": enableLocationParsing = False
-        if sys.argv[i] == "--disable-class-type-parsing": enableClassTypeParsing = False
-        if sys.argv[i] == "--disable-experimental-location-parsing": enableExperimentalLocationParsing = False
-        if sys.argv[i] == "-o" or sys.argv[i] == "--output-file" : csvFile = sys.argv[i+1]
-        if verifyCookie(sys.argv[i]): session = sys.argv[i]
+    for i in range(1, len(argv)):
+        if argv[i] == "--disable-location-parsing": enableLocationParsing = False
+        if argv[i] == "--disable-class-type-parsing": enableClassTypeParsing = False
+        if argv[i] == "--disable-experimental-location-parsing": enableExperimentalLocationParsing = False
+        if argv[i] == "-o" or argv[i] == "--output-file" : csvFile = argv[i+1]
+        if utils.verifyCookieStructure(argv[i]): session = argv[i]
 
     # If the required argument hasn't been provided, read from input.
     if session == "":
@@ -231,14 +223,17 @@ if __name__ == "__main__":
         except (KeyboardInterrupt, EOFError):
             exit(0)
 
-    # Cookie verification.
-    if (len(session)) != 37: invalidChar()
-    for i in range(4):
-        if session[i] != "0": invalidChar()
-    if session[27] != ":" or session[28] != "1" or session[29] != "d":
-        invalidChar()
+    # If the JSESSIONID is not valid, exit.
+    if not utils.verifyCookieStructure(session):
+        print("× Invalid JSESSIONID.")
+        exit(1)
 
     startTime = time.time()
     cookies = extractCookies(getFirstRequest(session))
     createCsv(postCalendarRequest(session, "true", cookies[0], cookies[1], "1630886400000", "1652054400000", cookies[2]))
     print("\nCalendar generated, took %.3fs" % (time.time() - startTime))
+    print("Saved as \"%s\"" % csvFile)
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

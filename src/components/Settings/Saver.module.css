@@ -1,0 +1,93 @@
+.form {
+  margin-bottom: 1rem;
+  margin-top: 0rem;
+  flex: 1;
+  text-align: center;
+  align-self: center;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+}
+
+.form div {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}
+
+.form input,
+.form label {
+  display: block;
+  color: white;
+  font-size: 30px;
+}
+
+.form .extension {
+  display: block;
+  color: white;
+  text-align: center;
+  border-color: grey;
+}
+
+.form .extension:hover {
+  cursor: not-allowed;
+}
+
+h3 {
+  display: block;
+  color: white;
+  font-size: 30px;
+  text-align: center;
+  padding-bottom: -1rem;
+}
+
+.form label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.form input,
+.form select {
+  font: inherit;
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  width: 90%;
+  color: grey;
+  margin-right: 0.25rem;
+  margin-left: 0.25rem;
+}
+
+.form input:focus {
+  outline: none;
+  border-color: #240370;
+  color: black;
+}
+
+.invalid input {
+  border: 1px solid #b40e0e;
+  background-color: #fddddd;
+}
+
+.error {
+  color: #b40e0e;
+}
+
+.saveas {
+  margin-bottom: 3rem;
+  height: 2rem;
+}
+
+.saveas h2 {
+  text-align: left;
+  font-weight: bold;
+  font-size: 50px;
+  margin-top: 5px;
+  margin-bottom: 1rem;
+}
+
+.form .extension {
+  width: 3rem;
+  color: black;
+}
