@@ -5,6 +5,9 @@ import React from "react";
 import SettingsContext from "../../store/settings-context";
 import classes from "./Form.module.css";
 
+// IN DEV
+import SignInButton from "./SignInButton";
+
 // Import the default state
 import {
   DEFAULT_FILENAME,
@@ -52,9 +55,8 @@ const Form = (props) => {
   };
 
   // Styling for the form (error message)
-  const codeInputClasses = `${classes.form} ${
-    codeHasError ? classes.invalid : ""
-  }`;
+  const codeInputClasses = `${classes.form} ${codeHasError ? classes.invalid : ""
+    }`;
 
   return (
     <React.Fragment>
@@ -118,6 +120,7 @@ const Form = (props) => {
           <span></span>
           Generar
         </button>
+        <SignInButton />
       </div>
     </React.Fragment>
   );

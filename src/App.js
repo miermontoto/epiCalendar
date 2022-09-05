@@ -6,6 +6,12 @@ import Settings from "./components/Settings/Settings";
 import classes from "./App.module.css";
 import NotValidCookie from "./pages/NotValidCookie";
 
+// IN DEV
+import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from "@azure/msal-react";
+import { Information } from "./components/Info/Information";
+import { SignOutButton } from "./components/Info/SignOutButton";
+
+
 function App() {
   // State for the modal window to be open or closed
   const [showSettings, setShowSettings] = useState(false);
@@ -30,7 +36,13 @@ function App() {
           <div className={classes.app}>
             {showSettings && <Settings onClose={hideSettingsHandler} />}
             <main>
-              <Form onShowSettings={showSettingsHandler} />
+              <AuthenticatedTemplate>
+                <Information />
+                <SignOutButton />
+              </AuthenticatedTemplate>
+              <UnauthenticatedTemplate>
+                <Form onShowSettings={showSettingsHandler} />
+              </UnauthenticatedTemplate>
             </main>
           </div>
         </Route>
