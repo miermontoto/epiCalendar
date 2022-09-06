@@ -23,9 +23,6 @@ function App() {
   return (
     <div>
       <Switch>
-        <Route path="/error" exact>
-          <NotValidCookie />
-        </Route>
         <Route path="*">
           <div className={classes.app}>
             {showSettings && <Settings onClose={hideSettingsHandler} />}

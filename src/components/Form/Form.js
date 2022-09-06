@@ -40,15 +40,22 @@ const Form = (props) => {
 
   const formSubmissionHandler = (event) => {
     event.preventDefault();
+    /*
     if (!codeIsValid) {
       console.log("Code is not valid");
       return;
     }
+    */
 
     document.getElementById("form").submit();
     ctx.saveNameHandler(DEFAULT_FILENAME);
     // ctx.check(DEFAULT_UNIVERSITY);
     codeReset();
+  };
+
+  const logoutHandler = (event) => {
+    event.preventDefault();
+    document.getElementById("logout").submit();
   };
 
   // Styling for the form (error message)
@@ -58,25 +65,13 @@ const Form = (props) => {
 
   return (
     <React.Fragment>
+      <form method="post" onSubmit={logoutHandler} id="logout" hidden>
+        <input type="hidden" name="logout" value="true"></input>
+      </form>
       <form method="post" onSubmit={formSubmissionHandler} id="form">
-        <legend>epiCalendar</legend>
+        <legend>epiCalendar (msal test)</legend>
         <div className={classes.control}>
           <div className={codeInputClasses}>
-            <label htmlFor="codigo">JSESSIONID</label>
-            <input
-              type="text"
-              id="codigo"
-              name="jsessionid"
-              onChange={codeChangeHandler}
-              onBlur={codeBlurHandler}
-              value={enteredCode}
-              placeholder="0000XXXXXXXXXXXXXXXXXXXXXXX:1dXXXXXXX"
-            />
-            {codeHasError && (
-              <React.Fragment>
-                <p className={classes.error}>El código no es válido.</p>
-              </React.Fragment>
-            )}
           </div>
           <div>
             <input type="hidden" name="filename" value={ctx.saveas} />
@@ -109,7 +104,7 @@ const Form = (props) => {
         <HeaderSettingsButton onClick={props.onShowSettings} />
         <button
           className="button"
-          disabled={!formIsValid}
+          //disabled={!formIsValid}
           onClick={formSubmissionHandler}
         >
           <span></span>
@@ -117,6 +112,17 @@ const Form = (props) => {
           <span></span>
           <span></span>
           Generar
+        </button>
+        <button
+          className="button"
+          onClick={logoutHandler}
+        >
+
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          Logout
         </button>
       </div>
     </React.Fragment>
