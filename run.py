@@ -12,7 +12,7 @@ from flask import Flask, render_template, request, send_file, session, redirect,
 from flask_session import Session
 from flask_talisman import Talisman
 
-app = Flask(__name__, static_folder='./build', static_url_path='/', template_folder='./build')
+app = Flask(__name__)
 app.config.from_object(app_config)
 Talisman(app, content_security_policy=None)
 Session(app)
@@ -24,12 +24,14 @@ debug = os.environ.get('FLASK_ENV') == 'development'
 def index():
     if not session.get("user"):
         return redirect(url_for("login"))
-    return render_template('index.html', user=session["user"], version=msal.__version__)
+    return render_template('index.html', user=session["user"])
 
 @app.route("/login")
 def login():
     # Technically we could use empty list [] as scopes to do just sign in,
     # here we choose to also collect end user consent upfront
+    if session.get("user"):
+        return authorized()
     session["flow"] = _build_auth_code_flow(scopes=app_config.SCOPE)
     return render_template("login.html", auth_url=session["flow"]["auth_uri"], version=msal.__version__)
 
@@ -112,11 +114,9 @@ def form_post():
     idToken = str(session['token_cache']).split('"secret": "')[2].split('"')[0]
     payload = f"id_token={idToken}"
     print(payload)
-    #print(requests.post(connect.cassiUrl, data=payload, headers={'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}).text)
-    print(requests.get(url='https://cassi.uniovi.es').cookies)
+    print(requests.post(connect.cassiUrl, data=payload, headers={'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}))
     return index()
 
-    jsessionid = request.form['jsessionid']
     filename = request.form['filename']
     location = request.form['location'] == "true"
     classType = request.form['class-type'] == "true"

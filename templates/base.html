@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>epiCalendar</title>
+    <meta charset="utf-8">
+    <meta content="Descarga tu calendario del SIES" name="description">
+    <meta content="Juan Mier" name="author">
+
+    <link rel="stylesheet" href="{{url_for('static', filename='css/main.css')}}">
+  </head>
+
+  <body>
+
+    <!--
+    {% if config.get("ENDPOINT") %}
+      <li><a href='/graphcall'>Call Microsoft Graph API</a></li>
+    {% endif %}
+
+    {% if config.get("B2C_PROFILE_AUTHORITY") %}
+      <li><a href='{{_build_auth_code_flow(authority=config["B2C_PROFILE_AUTHORITY"])["auth_uri"]}}'>Edit Profile</a></li>
+    {% endif %}
+    -->
+
+    <div class="main">
+      <h2>epiCalendar (msal test)</h2>
+      {% block button %}{% endblock %}
+      <form method="post">
+        <div>
+          <button type="submit" id="submit" class="button" {% block btnst %}{% endblock %}>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            Generar
+          </button>
+          <fieldset id="options" hidden>
+              <span>File name: </span><input type="text" id="filename" name="filename" placeholder="Calendario"><input type="text" name="filetype" id="filetype" size="3" readonly value=".ics">
+              <fieldset id="checkboxes">
+                <input type="checkbox" name="location" id="location" value="true" checked> <label for="location">Enable location parsing (EPI Gijón)</label> <br>
+                <input type="checkbox" name="class-type" id="class-type" value="true" checked> <label for="class-type">Enable class type parsing</label> <br>
+              </fieldset>
+          </fieldset>
+        </div>
+      </form>
+    </div>
+</html>
+

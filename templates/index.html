@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block button %}
+<form action="{{ url_for('logout') }}" id="logoutForm">
+  <label id="loginmsg">Logged in as {{ user.get("name") }} ({{user.get("preferred_username")}})</label>
+  <button id="logout" class="button">
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    Logout
+  </button>
+</form>
+{% endblock %}
+
+{% block btnst %}
+{% endblock %}

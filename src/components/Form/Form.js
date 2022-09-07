@@ -7,8 +7,7 @@ import classes from "./Form.module.css";
 
 // Import the default state
 import {
-  DEFAULT_FILENAME,
-  // DEFAULT_UNIVERSITY,
+  DEFAULT_FILENAME
 } from "../../store/settings-context";
 
 // Component that represents the form
@@ -35,21 +34,11 @@ const Form = (props) => {
       value.charAt(29) === "d"
   );
 
-  // Variable for the validity of the form
-  let formIsValid = codeIsValid;
-
   const formSubmissionHandler = (event) => {
     event.preventDefault();
-    /*
-    if (!codeIsValid) {
-      console.log("Code is not valid");
-      return;
-    }
-    */
 
     document.getElementById("form").submit();
     ctx.saveNameHandler(DEFAULT_FILENAME);
-    // ctx.check(DEFAULT_UNIVERSITY);
     codeReset();
   };
 

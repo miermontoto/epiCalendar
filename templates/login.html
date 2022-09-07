@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block button %}
+<form action="javascript:void(0);" id="loginForm">
+    <button id="login" class="button">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <a href="{{ auth_url }}">Login</a>
+    </button>
+</form>
+{% endblock %}
+
+{% block btnst %}
+disabled
+{% endblock %}
