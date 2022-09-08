@@ -127,7 +127,7 @@ def parseLocation(loc, codEspacio):
         return loc
 
     floor = codEspacio.split('.')[4]
-    if not codEspacio[:5] == "02.01" and buildingCode in buildingCodes: return loc
+    if not codEspacio[:5] == "02.01" or not buildingCode in buildingCodes: return loc
 
 
     # Aula AS-1 through Aula AS-11
@@ -148,7 +148,7 @@ def parseLocation(loc, codEspacio):
     # Parse rooms with standard room codes (x.x.xx)
     result = re.search(r'\d\...?\.\d\d', loc)
     if bool(result):
-        return f"{buildingCodes[buildingCode]}-{result.group(0)}"
+        return f"{buildingCodes[buildingCode]}-{result.group(0).upper()}"
 
     # Parse 'Aula DO-1' through 'Aula DO -17'
     # No code-specific parsing is needed, names are unique and easily identifiable.
@@ -164,12 +164,6 @@ def parseLocation(loc, codEspacio):
     result = re.search(r'^AULA DE-[1-8]$', loc.upper())
     if bool(result):
         return f"{result.group(0).replace('AULA ', '')}"
-
-    # Parse rooms from Departamental Oeste using their code (format: X.BC.XX)
-    # Very similar codes to the EP rooms, can be difficult to parse.
-    result = re.search(r'\d\...?\.\d\d', loc)
-    if bool(result):
-        return f"DO-{result.group(0)}"
 
     # Parse Aula A2 through A6 and Aula A1 through A8 from Edificio Polivalente.
     result = re.search(r'02.01.08.00.P((1.00.06.0[1-5])|(0.00.0[2-9]))', codEspacio)
@@ -233,11 +227,11 @@ def generateCalendar(rawResponse, locations):
             if field.strip():
                 data.append(field)
         # Save in variables the fields needed to build the CSV line of the event.
-        uid = data[0].split(': ')[1].replace('"', '')
-        title = data[1].split(': ')[1].replace('"', '')
-        start = data[2].split(': ')[1].replace('T', ' ').replace('"', '').split('+')[0]
-        end = data[3].split(': ')[1].replace('T', ' ').replace('"', '').split('+')[0]
-        description = data[7].split('"')[3].replace(r'\n', '')
+        uid = data[0].replace('"id": "', '')[0:-1]
+        title = data[1].replace('"title": "', '')[0:-1]
+        start = data[2].replace('"start": "', '')[0:-1].replace('T', ' ').split('+')[0]
+        end = data[3].replace('"end": "', '')[0:-1].replace('T', ' ').split('+')[0]
+        description = data[7].replace('"description":"', '').replace(r'\n', '').replace('"}', '').replace(']}]]>', '')
 
         titleSplit = title.split(" - ")
         classType = parseClassType(titleSplit[1])
@@ -256,6 +250,9 @@ def generateCalendar(rawResponse, locations):
         stats["classes"] += 1
         if enableStatistics:
             hours = int(end_hour.split(':')[0]) - int(start_hour.split(':')[0])
+            minutes = int(end_hour.split(':')[1]) - int(start_hour.split(':')[1])
+            hours = hours + minutes / 60
+            print(hours)
             stats["classes"] += 1
             stats["hours"] += hours
 
@@ -373,18 +370,18 @@ def main(argv) -> int:
     if enableStatistics:
         print("\nStatistics:")
         print("\tClasses: %d" % stats["classes"])
-        print("\tHours: %d" % stats["hours"])
+        print("\tHours: %.2f" % stats["hours"])
         print("\tDays of attendance: %d" % len(stats["days"]))
 
         print("\tAverage hours per day: %.2f" % (stats["hours"] / len(stats["days"])))
-        print("\tMax hours per day: %d" % max(stats["days"].values()))
+        print("\tMax hours per day: %.2f" % max(stats["days"].values()))
 
-        print("\tFirst quarter: %d classes (%d hours)" % (stats["Q1"][0], stats["Q1"][1]))
-        print("\tSecond quarter: %d classes (%d hours)" % (stats["Q2"][0], stats["Q2"][1]))
+        print("\tFirst quarter: %d classes (%.2f hours)" % (stats["Q1"][0], stats["Q1"][1]))
+        print("\tSecond quarter: %d classes (%.2f hours)" % (stats["Q2"][0], stats["Q2"][1]))
 
         print("\n\tClass types:")
         for classType in stats["classTypes"]:
-            print("\t\t%s: %d (%dh)" % (classType[0], classType[1][0], classType[1][1]))
+            print("\t\t%s: %d (%.2fh)" % (classType[0], classType[1][0], classType[1][1]))
 
         globalLocations = {
             "Aulario Norte": [0, 0],
@@ -412,16 +409,16 @@ def main(argv) -> int:
                 elif location[0][:2] == "EP":
                     globalLocations["Edificio Polivalente"][0] += location[1][0]
                     globalLocations["Edificio Polivalente"][1] += location[1][1]
-            print("\t\t%s: %d (%dh)" % (location[0], location[1][0], location[1][1]))
+            print("\t\t%s: %d (%.2fh)" % (location[0], location[1][0], location[1][1]))
 
         if enableLocationParsing:
             print("\t\tGlobal locations:")
             for location in globalLocations:
-                if globalLocations[location][0] != 0: print("\t\t\t%s: %d (%dh)" % (location, globalLocations[location][0], globalLocations[location][1]))
+                if globalLocations[location][0] != 0: print("\t\t\t%s: %d (%.2fh)" % (location, globalLocations[location][0], globalLocations[location][1]))
 
         print("\n\tSubjects:")
         for subject in stats["subjects"]:
-            print("\t\t%s: %d (%dh)" % (subject, stats["subjects"][subject][0], stats["subjects"][subject][1]))
+            print("\t\t%s: %d (%.2fh)" % (subject, stats["subjects"][subject][0], stats["subjects"][subject][1]))
 
 
     return 0
