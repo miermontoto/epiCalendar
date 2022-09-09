@@ -1,7 +1,4 @@
 .options {
-  /*display: flex;
-  flex-direction: column;
-  align-self: left;*/
   overflow: auto;
 }
 
@@ -24,7 +21,7 @@
 
 hr {
   width: 75%;
-  color: white;
+  /* color: white; */
 }
 
 .separation input {

@@ -1,10 +1,8 @@
-import React, { useState } from "react";
-import { Redirect, Route, Switch } from "react-router-dom";
-
-import Form from "./components/Form/Form";
+import React, { useState } from 'react';
+import './App.css';
+import { Form } from './components/Form/Form';
 import Settings from "./components/Settings/Settings";
-import classes from "./App.module.css";
-import NotValidCookie from "./pages/NotValidCookie";
+import { Footer } from './components/UI/Footer';
 
 function App() {
   // State for the modal window to be open or closed
@@ -21,20 +19,12 @@ function App() {
   };
 
   return (
-    <div>
-      <Switch>
-        <Route path="/error" exact>
-          <NotValidCookie />
-        </Route>
-        <Route path="*">
-          <div className={classes.app}>
-            {showSettings && <Settings onClose={hideSettingsHandler} />}
-            <main>
-              <Form onShowSettings={showSettingsHandler} />
-            </main>
-          </div>
-        </Route>
-      </Switch>
+    <div className="group">
+      {/* <h1 id="title">autoUniCalendar: Descarga tu calendario de Uniovi.</h1> */}
+      {/* <br /> */}
+      {showSettings && <Settings onClose={hideSettingsHandler} />}
+      <Form onShowSettings={showSettingsHandler} />
+      <Footer />
     </div>
   );
 }

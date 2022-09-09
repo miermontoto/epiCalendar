@@ -21,7 +21,7 @@ const Settings = (props) => {
             <span></span>
             <span></span>
             <span></span>
-            Close
+            Cerrar
           </button>
         </div>
       </div>

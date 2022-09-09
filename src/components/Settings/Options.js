@@ -8,10 +8,10 @@ const Options = (props) => {
   return (
     <React.Fragment>
       <div className={classes.options}>
-        <h3>Settings</h3>
+        <h3>Opciones</h3>
       </div>
       <div className={classes.cajitas}>
-        <Checkboxes university={props.university}/>
+        <Checkboxes university={props.university} />
       </div>
     </React.Fragment>
   );

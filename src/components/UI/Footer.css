@@ -1,0 +1,22 @@
+/* unvisited link */
+#links:link {
+  color: red;
+}
+
+/* visited link */
+#links:visited {
+  /* color: rgb(6, 170, 0);
+   */
+  color: #318930;
+}
+
+/* mouse over link */
+#links:hover {
+  color: hotpink;
+  font-weight: bold;
+}
+
+/* selected link */
+#links:active {
+  color: blue;
+}

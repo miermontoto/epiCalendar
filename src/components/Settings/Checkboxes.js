@@ -8,42 +8,6 @@ const Checkboxes = () => {
   // Access the settings context
   const ctx = useContext(SettingsContext);
 
-  // State for the checkboxes
-  // const [parse, setParse] = useState({ parse: true, parseDisabled: false });
-  // const [classParse, setClassParse] = useState({
-  //   classParsing: true,
-  //   classParsingDisabled: false,
-  // });
-
-  // No dependecies as we want the checkboxes to be updated only on first render
-  // useEffect(() => {
-  //   if (ctx.university === "uo") {
-  //     setParse({
-  //       parse: ctx.oviedoCheck.parse,
-  //       parseDisabled: ctx.oviedoCheck.parseDisabled,
-  //     });
-  //     setClassParse({
-  //       classParsing: ctx.oviedoCheck.classParsing,
-  //       classParsingDisabled: ctx.oviedoCheck.classParsingDisabled,
-  //     });
-  //   } else if (ctx.university === "epi") {
-  //     setParse({
-  //       parse: ctx.epiCheck.parse,
-  //       parseDisabled: ctx.epiCheck.parseDisabled,
-  //     });
-  //     setClassParse({
-  //       classParsing: ctx.epiCheck.classParsing,
-  //       classParsingDisabled: ctx.epiCheck.classParsingDisabled,
-  //     });
-  //   }
-  // }, [ctx.university, ctx.update]);
-
-  // // Effect for updating the checkboxes
-  // useEffect(() => {
-  //   ctx.parseHandler(parse.parse);
-  //   ctx.classParsingHandler(classParse.classParsing);
-  // }, [parse.parse, classParse.classParsing]);
-
   // Function that handles the checkbox change (parse or location)
   const parseHandler = () => {
     ctx.parseHandler(!ctx.parse);

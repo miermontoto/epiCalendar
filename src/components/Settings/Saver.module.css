@@ -43,7 +43,7 @@
 
 h3 {
   display: block;
-  color: white;
+  /* color: white; */
   font-size: 30px;
   text-align: center;
   padding-bottom: -1rem;

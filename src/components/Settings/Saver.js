@@ -36,7 +36,7 @@ const Saver = (props) => {
   return (
     <React.Fragment>
       <div className={classes.saveas}>
-        <h3>Filename</h3>
+        <h3>Guardar como</h3>
       </div>
       <div className={classes.form}>
         <input
