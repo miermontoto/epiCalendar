@@ -4,6 +4,8 @@ import './Form.css';
 import useInput from "../../hooks/use-input";
 import SettingsContext from "../../store/settings-context";
 
+import { MsalButton } from './MsalButton';
+
 import {
     DEFAULT_FILENAME,
     // DEFAULT_UNIVERSITY,
@@ -107,7 +109,8 @@ export const Form = (props) => {
                 <form action="">
                     <h1>Descargar usando credenciales</h1>
                     <p> Usa tus credenciales para tramitar la solicitud y descargar el calendario.</p>
-                    <button disabled="">Iniciar sesion</button>
+                    {/* <button disabled="">Sign in</button> */}
+                    <MsalButton />
                 </form>
             </div>
             <div className="overlay-container">
