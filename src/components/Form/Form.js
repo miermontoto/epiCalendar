@@ -116,12 +116,12 @@ export const Form = (props) => {
             <div className="overlay-container">
                 <div className="overlay">
                     <div className="overlay-panel overlay-left">
-                        <h1>Descargar usando cookie.</h1>
+                        <h1>Descargar usando cookie</h1>
                         <p>Puedes descargar el calendario usando una cookie de sesión, haciendo click aquí.</p>
                         <button id="cookies-sign" className="ghost">Usar cookie</button>
                     </div>
                     <div className="overlay-panel overlay-right">
-                        <h1>Descargar usando credenciales.</h1>
+                        <h1>Descargar usando credenciales</h1>
                         <p>
                             Si lo prefieres, puedes usar tus credenciales en lugar de tus cookies de sesión para descargar el calendario.
                         </p>

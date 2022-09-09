@@ -15,8 +15,3 @@
   color: hotpink;
   font-weight: bold;
 }
-
-/* selected link */
-#links:active {
-  color: blue;
-}
