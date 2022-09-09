@@ -78,7 +78,7 @@ export const Form = (props) => {
                     <span id="cookies-span">Introduce tu cookie de sesión.</span>
                     <div className="floating-input">
                         <label>
-                            <input type="text" id="jsessionid" required onChange={codeChangeHandler}
+                            <input type="text" name="jsessionid" id="jsessionid" required onChange={codeChangeHandler}
                                 onBlur={codeBlurHandler}
                                 value={enteredCode} />
                             <span className="floating-label">JSession</span>
