@@ -231,3 +231,9 @@ input:not(:focus):valid ~ .floating-label {
 .settings-button {
   padding-top: 2rem;
 }
+
+.invalid button:disabled {
+  background-color: rgb(255, 154, 154);
+  border-color: rgb(255, 154, 154);
+  cursor: not-allowed;
+}
