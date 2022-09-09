@@ -7,17 +7,19 @@ export const DEFAULT_UNIVERSITY = "epi";
 
 // Context for the settings of the app (better autocomplete)
 const SettingsContext = createContext({
-  
-  saveNameHandler: (name) => {},
+
+  saveNameHandler: (name) => { },
   saveas: "",
   parse: true,
-  parseHandler: (state) => {},
+  parseHandler: (state) => { },
   classParsing: true,
-  classParsingHandler: (state) => {},
+  classParsingHandler: (state) => { },
+  links: true,
+  linksHandler: (state) => { },
   update: false,
-  updateHandler: (state) => {},
+  updateHandler: (state) => { },
   extension: ".ics",
-  extensionHandler: (extension) => {},
+  extensionHandler: (extension) => { },
 });
 
 export const SettingsProvider = (props) => {
@@ -27,50 +29,10 @@ export const SettingsProvider = (props) => {
   const [update, setUpdate] = useState(false);
   const [isCheckedParsing, setIsCheckedParsing] = useState(true);
   const [isClassParsing, setIsClassParsing] = useState(true);
+  const [isLinks, setIsLinks] = useState(true);
 
   // State for the extension of the file
   const [extension, setExtension] = useState(".ics");
-
-  // More general states which are used in the form to save the settings
-  // const [oviedoCheck, setOviedoCheck] = useState({
-  //   parse: false,
-  //   classParsing: true,
-  //   parseDisabled: true,
-  //   classParsingDisabled: false,
-  // });
-  // const [epiCheck, setEpiCheck] = useState({
-  //   parse: true,
-  //   classParsing: true,
-  //   parseDisabled: false,
-  //   classParsingDisabled: false,
-  // });
-
-  // useEffect hooks to update the states of the checkboxes
-  // useEffect(() => {
-  //   if (university === "epi") {
-  //     setEpiCheck((existingValues) => ({
-  //       ...existingValues,
-  //       parse: isCheckedParsing,
-  //       parseDisabled: false,
-  //       classParsingDisabled: false,
-  //     }));
-  //   }
-  //   setUpdate(false);
-  // }, [isCheckedParsing]);
-  // useEffect(() => {
-  //   if (university === "uo") {
-  //     setOviedoCheck((previousState) => ({
-  //       ...previousState,
-  //       classParsing: isClassParsing,
-  //     }));
-  //   } else {
-  //     setEpiCheck((previousState) => ({
-  //       ...previousState,
-  //       classParsing: isClassParsing,
-  //     }));
-  //   }
-  //   setUpdate(false);
-  // }, [isClassParsing]);
 
   // Function to set the filename state
   const saveNameHandler = (name) => {
@@ -84,6 +46,9 @@ export const SettingsProvider = (props) => {
   const classParsingHandler = (state) => {
     setIsClassParsing(state);
   };
+  const linksHandler = (state) => {
+    setIsLinks(state);
+  }
 
   // Function to set the update state
   const updateHandler = (state) => {
@@ -105,6 +70,8 @@ export const SettingsProvider = (props) => {
         parse: isCheckedParsing,
         classParsing: isClassParsing,
         classParsingHandler: classParsingHandler,
+        links: isLinks,
+        linksHandler: linksHandler,
         update: update,
         updateHandler: updateHandler,
         extension: extension,

@@ -8,15 +8,21 @@ const Checkboxes = () => {
   // Access the settings context
   const ctx = useContext(SettingsContext);
 
-  // Function that handles the checkbox change (parse or location)
+  // Function that handles the checkbox change for location
   const parseHandler = () => {
     ctx.parseHandler(!ctx.parse);
     ctx.updateHandler(true);
   };
 
-  // Function that handles the checkbox change (class-type or class-type)
+  // Function that handles the checkbox change for class type
   const classParsingHandler = () => {
     ctx.classParsingHandler(!ctx.classParsing);
+    ctx.updateHandler(true);
+  };
+
+  // Function that handles the checkbox change for links
+  const linksHandler = () => {
+    ctx.linksHandler(!ctx.links);
     ctx.updateHandler(true);
   };
 
@@ -30,7 +36,7 @@ const Checkboxes = () => {
           checked={ctx.parse}
           onChange={parseHandler}
         />
-        <label htmlFor="location-parsing">Location parsing (recommended for EPI Gijón)</label>
+        <label htmlFor="location-parsing">Filtrado de nombres de aulas (solo EPI Gijón)</label>
       </div>
       <div>
         <input
@@ -40,7 +46,17 @@ const Checkboxes = () => {
           checked={ctx.classParsing}
           onChange={classParsingHandler}
         />
-        <label htmlFor="class-parsing">Class type parsing</label>
+        <label htmlFor="class-parsing">Filtrado de tipo de clases</label>
+      </div>
+      <div>
+        <input
+          type="checkbox"
+          id="links"
+          // checked={classParse.classParsing}
+          checked={ctx.links}
+          onChange={linksHandler}
+        />
+        <label htmlFor="links">Añadir enlaces de ubicación en la descripción</label>
       </div>
     </div>
   );

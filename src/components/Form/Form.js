@@ -96,6 +96,9 @@ export const Form = (props) => {
                         <input type="hidden" name="class-type" value={ctx.classParsing} />
                     </div>
                     <div>
+                        <input type="hidden" name="links" value={ctx.links} />
+                    </div>
+                    <div>
                         <input type="hidden" name="extension" value={ctx.extension} />
                     </div>
                 </form>
