@@ -1,26 +1,26 @@
 import React from "react";
 
-import "./MsalButton.css";
+import "./SignInButton.css";
 
 import { useMsal } from "@azure/msal-react";
 import { loginRequest } from "../../authConfig";
 
-// function handleLogin(instance) {
-//     instance.loginPopup(loginRequest).catch(e => {
-//         console.error(e);
-//     });
-//     console.log(instance);
-// }
+function handleLogin(instance) {
+    instance.loginPopup(loginRequest).catch(e => {
+        console.error(e);
+    });
+    // console.log(instance);
+}
 
 
-export const MsalButton = () => {
+const SignInButton = () => {
     const { instance } = useMsal();
 
-    const handleLogin = () => {
-        instance.loginPopup(loginRequest).catch(e => {
-            console.error(e);
-        });
-    };
+    // const handleLogin = () => {
+    //     instance.loginPopup(loginRequest).catch(e => {
+    //         console.error(e);
+    //     });
+    // };
 
 
     return (
@@ -33,3 +33,5 @@ export const MsalButton = () => {
         </div>
     );
 };
+
+export default SignInButton;
