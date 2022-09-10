@@ -7,8 +7,8 @@ import { useMsal } from "@azure/msal-react";
 export const SignOutButton = () => {
     const { instance } = useMsal();
 
-    const handleLogout = async () => {
-        await instance.logoutPopup({
+    const handleLogout = () => {
+        instance.logoutPopup({
             postLogoutRedirectUri: "/",
             mainWindowRedirectUri: "/"
         });

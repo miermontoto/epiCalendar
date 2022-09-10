@@ -20,7 +20,7 @@ import { callMsGraph } from "../../graph";
  * Renders information about the signed-in user or a button to retrieve data about the user
  */
 export const Information = () => {
-    const isAuthenticated = useIsAuthenticated();
+    // const isAuthenticated = useIsAuthenticated();
     const { instance, accounts } = useMsal();
     const [graphData, setGraphData] = useState(null);
 
@@ -37,7 +37,7 @@ export const Information = () => {
     return (
         <>
             <h5 className="card-title">Welcome {accounts[0].name}</h5>
-            {graphData && isAuthenticated ?
+            {graphData ?
                 <ProfileData graphData={graphData} />
                 :
                 <button onClick={RequestProfileData}>Request Profile Information</button>

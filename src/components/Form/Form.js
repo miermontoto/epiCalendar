@@ -10,6 +10,7 @@ import {
     DEFAULT_FILENAME,
     // DEFAULT_UNIVERSITY,
 } from "../../store/settings-context";
+import { SignOutButton } from '../Info/SignOutButton';
 
 export const Form = (props) => {
     // Access the settings context
@@ -132,6 +133,9 @@ export const Form = (props) => {
         </div >
         <div className="settings-button">
             <button onClick={props.onShowSettings}>Opciones</button>
+        </div>
+        <div>
+            <SignOutButton />
         </div>
     </>);
 };

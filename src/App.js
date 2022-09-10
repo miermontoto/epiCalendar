@@ -28,12 +28,12 @@ function App() {
     <div className="group">
       {/* <h1 id="title">autoUniCalendar: Descarga tu calendario de Uniovi.</h1> */}
       {/* <br /> */}
+      {showSettings && <Settings onClose={hideSettingsHandler} />}
       <AuthenticatedTemplate>
         <Information />
         <SignOutButton />
       </AuthenticatedTemplate>
       <UnauthenticatedTemplate>
-        {showSettings && <Settings onClose={hideSettingsHandler} />}
         <Form onShowSettings={showSettingsHandler} />
       </UnauthenticatedTemplate>
       <Footer />
