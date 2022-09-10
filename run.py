@@ -2,7 +2,6 @@ import epiCalendar
 import os
 import uuid
 import utils
-import re
 
 
 from flask import Flask, render_template, request, send_file
