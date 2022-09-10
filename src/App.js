@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Redirect, Route, Switch } from "react-router-dom";
+import { Redirect, Route, Routes } from "react-router-dom";
 
 import Form from "./components/Form/Form";
 import Settings from "./components/Settings/Settings";
@@ -28,11 +28,9 @@ function App() {
 
   return (
     <div>
-      <Switch>
-        <Route path="/error" exact>
-          <NotValidCookie />
-        </Route>
-        <Route path="*">
+      <Routes>
+        <Route path="/error" exact element={<NotValidCookie />} />
+        <Route path="*" element={
           <div className={classes.app}>
             {showSettings && <Settings onClose={hideSettingsHandler} />}
             <main>
@@ -45,8 +43,8 @@ function App() {
               </UnauthenticatedTemplate>
             </main>
           </div>
-        </Route>
-      </Switch>
+        } />
+      </Routes>
     </div>
   );
 }

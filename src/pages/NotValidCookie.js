@@ -1,14 +1,14 @@
 import React from "react";
 
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import classes from "./NotValidCookie.module.css";
 
 const NotValidCookie = () => {
-  const history = useHistory();
+  const navigation = useNavigate();
 
   // If the backend can call the error page as a redirect, this will redirect to the error page (not reload neither state loss)
   const returnButtonHandler = () => {
-    history.push("/");
+    navigation.navigate("/");
   };
 
   return (
