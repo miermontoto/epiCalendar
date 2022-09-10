@@ -4,6 +4,12 @@ import { Form } from './components/Form/Form';
 import Settings from "./components/Settings/Settings";
 import { Footer } from './components/UI/Footer';
 
+// IN DEV
+import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from "@azure/msal-react";
+import { Information } from "./components/Info/Information";
+import { SignOutButton } from "./components/Info/SignOutButton";
+
+
 function App() {
   // State for the modal window to be open or closed
   const [showSettings, setShowSettings] = useState(false);
@@ -22,8 +28,14 @@ function App() {
     <div className="group">
       {/* <h1 id="title">autoUniCalendar: Descarga tu calendario de Uniovi.</h1> */}
       {/* <br /> */}
-      {showSettings && <Settings onClose={hideSettingsHandler} />}
-      <Form onShowSettings={showSettingsHandler} />
+      <AuthenticatedTemplate>
+        <Information />
+        <SignOutButton />
+      </AuthenticatedTemplate>
+      <UnauthenticatedTemplate>
+        {showSettings && <Settings onClose={hideSettingsHandler} />}
+        <Form onShowSettings={showSettingsHandler} />
+      </UnauthenticatedTemplate>
       <Footer />
     </div>
   );
