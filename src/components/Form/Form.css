@@ -237,3 +237,14 @@ input:not(:focus):valid ~ .floating-label {
   border-color: rgb(255, 154, 154);
   cursor: not-allowed;
 }
+
+.authenticatedMsal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.authenticatedMsal #descarga {
+  margin-bottom: 1rem;
+}

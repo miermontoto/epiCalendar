@@ -30,14 +30,16 @@ function App() {
       {/* <h1 id="title">autoUniCalendar: Descarga tu calendario de Uniovi.</h1> */}
       {/* <br /> */}
       {showSettings && <Settings onClose={hideSettingsHandler} />}
-      <AuthenticatedTemplate>
+      {/* <AuthenticatedTemplate>
         <Information />
         <SignOutButton />
       </AuthenticatedTemplate>
       <UnauthenticatedTemplate>
         <Form onShowSettings={showSettingsHandler} />
         <Footer />
-      </UnauthenticatedTemplate>
+      </UnauthenticatedTemplate> */}
+      <Form onShowSettings={showSettingsHandler} />
+      <Footer />
     </div>
   );
 }

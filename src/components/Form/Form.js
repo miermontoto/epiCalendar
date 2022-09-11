@@ -9,8 +9,9 @@ import {
     DEFAULT_FILENAME,
     // DEFAULT_UNIVERSITY,
 } from "../../store/settings-context";
-import { SignOutButton } from '../Info/SignOutButton';
 
+import { SignOutButton } from '../Info/SignOutButton';
+import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from "@azure/msal-react";
 export const Form = (props) => {
     // Access the settings context
     const ctx = React.useContext(SettingsContext);
@@ -109,7 +110,15 @@ export const Form = (props) => {
                 <form action="javascript:void(0);">
                     <h1>Descargar usando credenciales</h1>
                     <p> Usa tus credenciales para tramitar la solicitud y descargar el calendario.</p>
-                    <SignInButton />
+                    <UnauthenticatedTemplate>
+                        <SignInButton />
+                    </UnauthenticatedTemplate>
+                    <AuthenticatedTemplate>
+                        <div className="authenticatedMsal">
+                            <button id="descarga">Descargar</button>
+                            <SignOutButton />
+                        </div>
+                    </AuthenticatedTemplate>
                 </form>
             </div>
             <div className="overlay-container">
