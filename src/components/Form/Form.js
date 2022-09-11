@@ -12,6 +12,7 @@ import {
 
 import { SignOutButton } from '../Info/SignOutButton';
 import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from "@azure/msal-react";
+import MsalButton from './MsalButton';
 export const Form = (props) => {
     // Access the settings context
     const ctx = React.useContext(SettingsContext);
@@ -111,12 +112,14 @@ export const Form = (props) => {
                     <h1>Descargar usando credenciales</h1>
                     <p> Usa tus credenciales para tramitar la solicitud y descargar el calendario.</p>
                     <UnauthenticatedTemplate>
-                        <SignInButton />
+                        {/* <SignInButton /> */}
+                        <MsalButton type="login" text="Sign in" />
                     </UnauthenticatedTemplate>
                     <AuthenticatedTemplate>
                         <div className="authenticatedMsal">
                             <button id="descarga">Descargar</button>
-                            <SignOutButton />
+                            {/* <SignOutButton /> */}
+                            <MsalButton type="logout" text="Sign out" />
                         </div>
                     </AuthenticatedTemplate>
                 </form>
