@@ -8,6 +8,7 @@ import { Footer } from './components/UI/Footer';
 import { AuthenticatedTemplate, UnauthenticatedTemplate, useMsal } from "@azure/msal-react";
 import { Information } from "./components/Info/Information";
 import { SignOutButton } from "./components/Info/SignOutButton";
+import SignInButton from './components/Form/SignInButton';
 
 
 function App() {
@@ -35,8 +36,8 @@ function App() {
       </AuthenticatedTemplate>
       <UnauthenticatedTemplate>
         <Form onShowSettings={showSettingsHandler} />
+        <Footer />
       </UnauthenticatedTemplate>
-      <Footer />
     </div>
   );
 }

@@ -106,10 +106,9 @@ export const Form = (props) => {
                 </form>
             </div>
             <div className="form-container signin">
-                <form action="">
+                <form action="javascript:void(0);">
                     <h1>Descargar usando credenciales</h1>
                     <p> Usa tus credenciales para tramitar la solicitud y descargar el calendario.</p>
-                    {/* <button disabled="">Sign in</button> */}
                     <SignInButton />
                 </form>
             </div>
@@ -132,9 +131,6 @@ export const Form = (props) => {
         </div >
         <div className="settings-button">
             <button onClick={props.onShowSettings}>Opciones</button>
-        </div>
-        <div>
-            <SignOutButton />
         </div>
     </>);
 };
