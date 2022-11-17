@@ -3,10 +3,13 @@
 
 import re
 import sys
-import urllib.parse
 import time
-from ics import Calendar, Event # needed to save calendar in .ics format (iCalendar)
-from datetime import datetime # needed to convert academic years to unix timestamps
+import urllib.parse
+from datetime import \
+    datetime  # needed to convert academic years to unix timestamps
+
+from ics import (  # needed to save calendar in .ics format (iCalendar)
+    Calendar, Event)
 
 # import custom modules
 import connect
@@ -210,11 +213,12 @@ def generateCalendar(rawResponse, locations):
 
     stats = { # dictionary to store stats about the calendar. it's only used if stats are enabled.
         "hours": 0,
-        "classes": 0,
+        "classes": -1,
         "days": {},
         "classTypes": {},
         "locations": {},
         "subjects": {},
+        "perHours": {},
         "Q1": [0, 0],
         "Q2": [0, 0]
     }
@@ -264,8 +268,6 @@ def generateCalendar(rawResponse, locations):
             hours = int(end_hour.split(':')[0]) - int(start_hour.split(':')[0])
             minutes = int(end_hour.split(':')[1]) - int(start_hour.split(':')[1])
             hours = hours + minutes / 60
-            print(hours)
-            stats["classes"] += 1
             stats["hours"] += hours
 
             if classType not in stats["classTypes"]:
@@ -280,6 +282,9 @@ def generateCalendar(rawResponse, locations):
             if titleSplit[0] not in stats["subjects"]:
                 stats["subjects"][titleSplit[0]] = [0, 0]
 
+            if hours not in stats["perHours"]:
+                stats["perHours"][hours] = 0
+
             stats["classTypes"][classType][0] += 1
             stats["classTypes"][classType][1] += hours
             stats["locations"][location][0] += 1
@@ -287,6 +292,7 @@ def generateCalendar(rawResponse, locations):
             stats["days"][start_date] += hours
             stats["subjects"][titleSplit[0]][0] += 1
             stats["subjects"][titleSplit[0]][1] += hours
+            stats["perHours"][hours] += 1
 
             if int(start_date.split('-')[1]) >= 9:
                 stats["Q1"][0] += 1
@@ -330,7 +336,7 @@ def main(argv) -> int:
 
     # Read flags from arguments.
     if "--help" in argv or "-h" in argv:
-        print("Usage: python3 epiCalendar.py [JSESSIONID]")
+        print("Usage: python epiCalendar.py [JSESSIONID]")
         print("\nFLAGS:")
         print("\t[--disable-location-parsing]: Disables the parsing of the location of the class.")
         print("\t[--disable-class-type-parsing]: Disables the parsing of the class type of the class.")
@@ -389,42 +395,19 @@ def main(argv) -> int:
         print("\tFirst quarter: %d classes (%.2f hours)" % (stats["Q1"][0], stats["Q1"][1]))
         print("\tSecond quarter: %d classes (%.2f hours)" % (stats["Q2"][0], stats["Q2"][1]))
 
+        print("\n\tClasses per number of hours:")
+        for hour in sorted(stats["perHours"].keys()):
+            print("\t\t%d: %d" % (hour, stats["perHours"][hour]))
+
         print("\n\tClass types:")
         for classType in stats["classTypes"]:
             print("\t\t%s: %d (%.2fh)" % (classType[0], classType[1][0], classType[1][1]))
 
-        globalLocations = {
-            "Aulario Norte": [0, 0],
-            "Aulario Sur": [0, 0],
-            "Departamental Oeste": [0, 0],
-            "Departamental Este": [0, 0],
-            "Edificio Polivalente": [0, 0]
-        }
 
         print("\n\tLocations:")
         for location in stats["locations"]:
-            if enableLocationParsing:
-                if location[0][:2] == "AN":
-                    globalLocations["Aulario Norte"][0] += location[1][0]
-                    globalLocations["Aulario Norte"][1] += location[1][1]
-                elif location[0][:2] == "AS":
-                    globalLocations["Aulario Sur"][0] += location[1][0]
-                    globalLocations["Aulario Sur"][1] += location[1][1]
-                elif location[0][:2] == "DO":
-                    globalLocations["Departamental Oeste"][0] += location[1][0]
-                    globalLocations["Departamental Oeste"][1] += location[1][1]
-                elif location[0][:2] == "DE":
-                    globalLocations["Departamental Este"][0] += location[1][0]
-                    globalLocations["Departamental Este"][1] += location[1][1]
-                elif location[0][:2] == "EP":
-                    globalLocations["Edificio Polivalente"][0] += location[1][0]
-                    globalLocations["Edificio Polivalente"][1] += location[1][1]
             print("\t\t%s: %d (%.2fh)" % (location[0], location[1][0], location[1][1]))
 
-        if enableLocationParsing:
-            print("\t\tGlobal locations:")
-            for location in globalLocations:
-                if globalLocations[location][0] != 0: print("\t\t\t%s: %d (%.2fh)" % (location, globalLocations[location][0], globalLocations[location][1]))
 
         print("\n\tSubjects:")
         for subject in stats["subjects"]:

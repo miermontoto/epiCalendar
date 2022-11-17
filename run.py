@@ -1,11 +1,12 @@
-import epiCalendar
 import os
 import uuid
-import utils
-
 
 from flask import Flask, render_template, request, send_file
 from flask_talisman import Talisman
+
+import epiCalendar
+import utils
+
 app = Flask(__name__, static_folder='./build', static_url_path='/', template_folder='./build')
 Talisman(app, content_security_policy=None)
 

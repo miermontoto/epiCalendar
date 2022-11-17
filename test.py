@@ -1,11 +1,11 @@
-import unittest
-import sys
-import os
 import contextlib
+import os
+import sys
+import unittest
 
+import connect as connect
 import epiCalendar
 import utils as utils
-import connect as connect
 
 
 class testUtils(unittest.TestCase):
@@ -88,4 +88,4 @@ if __name__ == '__main__':
     if not utils.verifyCookieStructure(jsessionid):
         print("Invalid JSESSIONID.")
         sys.exit(1)
-    unittest.main()
+    unittest.main(verbosity=3)

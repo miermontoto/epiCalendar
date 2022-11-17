@@ -1,6 +1,8 @@
-import sys
 import re
+import sys
+
 import connect
+
 
 # Verifies if the cookie is valid server-side.
 # This check is slower than the basic cookie verification, but it is 100% reliable.
