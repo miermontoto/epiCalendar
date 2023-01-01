@@ -1,9 +1,12 @@
 #!/usr/bin/python3
 # coding: utf-8
 
+import argparse
+import json
 import re
 import sys
 import time
+import traceback
 import urllib.parse
 from datetime import datetime  # needed to convert academic years to unix timestamps
 from ics import (Calendar, Event)  # needed to save calendar in .ics format (iCalendar)
@@ -12,10 +15,6 @@ from ics import (Calendar, Event)  # needed to save calendar in .ics format (iCa
 import connect
 import parse
 import utils
-
-# Declare global variables.
-reg = '"([^"]*)"'
-filename = "Calendario"  # Can be changed through "-o" flag.
 
 
 def commence(msg):
@@ -61,6 +60,7 @@ def extractCookies(response):
     init = commence("Extracting cookies")
 
     # Iterate the response lines to search the cookies, and save them in variables.
+    reg = '"([^"]*)"'
     found_first, found_second, found_third = False, False, False
     for line in response.split('\n'):
         if '<div id="j_id' in line and not found_first:
@@ -117,7 +117,7 @@ def postCalendarRequest(jsessionid, cookies):
     except AttributeError: raise AttributeError("Empty calendar")
 
     locations = {}
-    if enableLocationParsing or enableLinks:
+    if locationParsing or links:
         # obtain links for each event location.
         # links are used to obtain room codes, which include city, building and other important info.
         locationPayload = f"javax.faces.partial.ajax=true&javax.faces.source={source}&javax.faces.partial.execute={source}&javax.faces.partial.render={source[:10:]}eventDetails+{source[:10:]}aulas_url&javax.faces.behaviour.event=eventSelect&javax.faces.partial.event=eventSelect&{source}_selectedEventId={sampleId}&{submit}_SUBMIT=1&javax.faces.ViewState={view}"
@@ -142,49 +142,40 @@ def postCalendarRequest(jsessionid, cookies):
 def obtainEvents(rawResponse, locations):
     init = commence("Parsing events")
 
-    # Separate the events from its XML context.
-    text = rawResponse.split('<')
-    events = text[5].split('{')
-    del events[0:2]
+    data = json.loads(rawResponse.split('[{"events" : ')[1].split('}]]')[0])
+    classes = []
 
-    classes = []  # create the calendar object.
+    for event in data:
+        start = event['start'].replace('T', ' ').split('+')[0]
+        end = event['end'].replace('T', ' ').split('+')[0]
+        desc = event['description'].replace('\n', '')
 
-    # Each field of the event is separated by commas.
-    for event in events:
-        data = []
-        for field in event.split(','):  # obtain raw data.
-            if field.strip(): data.append(field)
+        titleSplit = event['title'].split(" - ")
+        subject = titleSplit[0]
+        classType = parse.parseClassType(titleSplit[1]) if classTypeParsing else titleSplit[1]
+        title = f"{subject} ({classType})"
 
-        # Save in variables the fields needed to build the CSV line of the event.
-        uid = data[0].replace('"id": "', '')[0:-1]
-        title = data[1].replace('"title": "', '')[0:-1]
-        start = data[2].replace('"start": "', '')[0:-1].replace('T', ' ').split('+')[0]
-        end = data[3].replace('"end": "', '')[0:-1].replace('T', ' ').split('+')[0]
-        description = data[7].replace('"description":"', '').replace(r'\n', '').replace('"}', '').replace(']}]]>', '')
+        loc = desc.split(" - ")[1]
+        code = locations[loc.lower()].split('?codEspacio=')[1] if links or locationParsing else {}
+        location = parse.parseLocation(loc, code) if locationParsing else loc
+        if links: desc += f" ({locations[loc.lower()]})"
 
-        titleSplit = title.split(" - ")
-        classType = parse.parseClassType(titleSplit[1]) if enableClassTypeParsing else titleSplit[1]
-        title = f"{titleSplit[0]} ({classType})"
-
-        loc = description.split(" - ")[1]
-        code = locations[loc.lower()].split('?codEspacio=')[1] if enableLinks or enableLocationParsing else {}
-        location = parse.parseLocation(loc, code) if enableLocationParsing else loc
-        if enableLinks: description += f" ({locations[loc.lower()]})"
-
-        classes.append(Class(uid, title, start, end, location, description, classType, titleSplit[0]))
+        classes.append(Class(event['id'], title, start, end, location, desc if description else "", classType, subject))
 
     finalize(init)
     return classes
 
 
-def generateOutput(classes):
-    init = commence("Generating output")
+def generateOutput(classes, filename):
+    init = commence(f"Generating output ({filename}.{'ics' if icsMode else 'csv'})")
 
+    # Generate the output file.
     if icsMode: c = Calendar()
     else:
         g = open(filename + ".csv", "w")
         g.write("Subject,Start Date,Start Time,End Date,End Time,Location,Description\n")
 
+    # Write each event to the file.
     for event in classes:
         if icsMode:
             e = Event(name=event.title, begin=event.start_raw, end=event.end_raw, description=event.description, location=event.location, uid=event.uid)
@@ -193,6 +184,7 @@ def generateOutput(classes):
             csv_line = f"{event.title},{event.date},{event.start},{event.date},{event.end},{event.location},{event.description}\n"
             g.write(csv_line)
 
+    # Write the file to disk.
     if icsMode:
         with open(filename + ".ics", "w") as f:
             for i in c.serialize_iter():
@@ -292,64 +284,55 @@ def printStats(classes):
 
 
 def main(argv) -> int:
-    global enableLocationParsing, enableClassTypeParsing, enableStatistics, filename, icsMode, enableLinks, dryRun
-    enableLocationParsing = True
-    enableClassTypeParsing = True
-    enableLinks = True
-    enableStatistics = False
-    icsMode = True
-    dryRun = False
+    global locationParsing, classTypeParsing, stats, icsMode, links, dryRun, separate, description
 
-    session = ""  # JSESSIONID cookie value.
+    parser = argparse.ArgumentParser()
+    parser.add_argument("session", metavar="JSESSIONID", help="JSESSIONID cookie value.")
+    parser.add_argument("--location", choices=["on", "off"], default="on", help="Enables or disables the parsing of the location of the class. Default is 'on'.")
+    parser.add_argument("--class-type", choices=["on", "off"], default="on", help="Enables or disables the parsing of the class type of the class. Default is 'on'.")
+    parser.add_argument("--links", choices=["on", "off"], default="on", help="Enables or disables placing links of rooms in the description of the events. Default is 'on'.")
+    parser.add_argument("--statistics", "-s", "--stats", choices=["on", "off"], default="off", help="Returns various statistics about all the events collected. Default is 'off'.")
+    parser.add_argument("--format", choices=["csv", "ics"], default="ics", help="Sets the output file format. Default is 'ics'.")
+    parser.add_argument("--dry-run", action='store_true', help="Disables the generation of files.")
+    parser.add_argument("--output-file", "-o", "--filename", "-f", default="Calendario", help="Sets the name of the output file.")
+    parser.add_argument("--separate-by", choices=["subject", "classType"], help="Creates separate files depending on the option selected. Default is 'off'.")
+    parser.add_argument("--description", choices=["on", "off"], default="on", help="Enables or disables the description of the events. Default is 'on'.")
 
-    # Read flags from arguments.
-    if "--help" in argv or "-h" in argv:
-        print("Usage: python epiCalendar.py [JSESSIONID]")
-        print("\nFLAGS:")
-        print("\t[--disable-location-parsing]: Disables the parsing of the location of the class.")
-        print("\t[--disable-class-type-parsing]: Disables the parsing of the class type of the class.")
-        print("\t[--disable-links]: Disables placing links of rooms in the description of the events.")
-        print("\t[--enable-statistics | -s | --stats]: Returns various statistics about all the events collected.")
-        print("\t[--csv]: saves the calendar as a CSV file instead of an iCalendar file.")
-        print("\t[--dry-run]: blocks any file from being created.")
-        print("\t[--help], -h: shows this help message.")
-        print("\t[--output-file | -o]: sets the name of the output file.")
-        return 0
+    args = parser.parse_args()
 
-    for i in range(1, len(argv)):
-        if argv[i] == "--disable-location-parsing": enableLocationParsing = False
-        if argv[i] == "--disable-class-type-parsing": enableClassTypeParsing = False
-        if argv[i] == "--disable-links": enableLinks = False
-        if argv[i] == "--csv": icsMode = False
-        if argv[i] == "-o" or argv[i] == "--output-file": filename = argv[i + 1]
-        if argv[i] == "-s" or argv[i] == "--stats" or argv[i] == "--enable-statistics": enableStatistics = True
-        if argv[i] == "--dry-run": dryRun = True
-        if utils.verifyCookieStructure(argv[i]): session = argv[i]
-
-    # If the required argument hasn't been provided, read from input.
-    if session == "":
-        try: session = input("Enter JSESSIONID: ")
-        except (KeyboardInterrupt, EOFError): return 0
+    locationParsing = args.location == "on"
+    classTypeParsing = args.class_type == "on"
+    links = args.links == "on"
+    stats = args.statistics == "on"
+    icsMode = args.format == "ics"
+    dryRun = args.dry_run
+    filename = args.output_file
+    session = args.session
+    separate = args.separate_by
+    description = args.description == "on"
 
     # If the JSESSIONID is not valid, exit.
     if not utils.verifyCookieStructure(session):
         print("Invalid JSESSIONID.")
         return 1
 
-    startTime = time.time()
     try:
         cookies = extractCookies(getFirstRequest(session))
         rawResponse, locations = postCalendarRequest(session, cookies)
         classes = obtainEvents(rawResponse, locations)
-        if not dryRun: generateOutput(classes)
+        if not dryRun:
+            if separate is not None:
+                for element in list(set([getattr(c, separate) for c in classes])):
+                    generateOutput([c for c in classes if getattr(c, separate) == element], filename + "_" + element.replace(' ', ''))
+            else: generateOutput(classes, filename)
     except Exception as e:
-        print(f"{status} [×] ({e})")
+        print(f"{status} [×]")
+        traceback.print_exc()
         return 2 if e.__class__ == AttributeError else 1
 
-    print("\n%s, took %.3fs (%d events parsed)" % ("Dry run completed" if dryRun else "Calendar generated", time.time() - startTime, len(classes)))
-    if not dryRun: print(f"Saved as \"{filename}.{'ics' if icsMode else 'csv'}\"")
-    if enableStatistics: printStats(classes)
+    print("\nScript finished, %d events parsed." % len(classes))
 
+    if stats: printStats(classes)
     return 0
 
 
