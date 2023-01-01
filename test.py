@@ -26,6 +26,7 @@ class testUtils(unittest.TestCase):
         self.assertFalse(utils.verifyCookieExpiration("00000dlJBa0_91pHyD9bDHAW5VO:1d18eurd6"))
         self.assertTrue(utils.verifyCookieExpiration(jsessionid))
 
+
 class testConnect(unittest.TestCase):
     def test_firstRequest(self):
         r = connect.firstRequest(jsessionid)
@@ -36,6 +37,7 @@ class testConnect(unittest.TestCase):
 
     def test_postRequest(self):
         pass
+
 
 class testCalendar(unittest.TestCase):
 
@@ -79,8 +81,10 @@ class testCalendar(unittest.TestCase):
 def run(argv):
     with contextlib.redirect_stdout(None): epiCalendar.main(argv)
 
+
 def remove(filename):
     if os.path.exists(filename): os.remove(filename)
+
 
 if __name__ == '__main__':
     global jsessionid
