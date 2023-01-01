@@ -17,8 +17,8 @@ import utils
 
 # Declare global variables.
 reg = '"([^"]*)"'
-filename = "Calendario" # Can be changed through "-o" flag.
-buildingCodes = { # building codes for 'Milla del Conocimiento' (Gijón 02.01) sourced from gis.uniovi.es
+filename = "Calendario"  # Can be changed through "-o" flag.
+buildingCodes = {  # building codes for 'Milla del Conocimiento' (Gijón 02.01) sourced from gis.uniovi.es
     '01': 'AN',
     '02': 'AS',
     '04': 'DE',
@@ -38,6 +38,7 @@ def getFirstRequest(jsessionid):
     print("✓ (%.3fs)" % (time.time() - initTime))
 
     return r.text
+
 
 # Function to extract the cookies necessary to make the POST request, from the server response of the first request.
 def extractCookies(response):
@@ -62,11 +63,12 @@ def extractCookies(response):
 
         if found_first and found_second and found_third: break
 
-    if not 'source' in locals(): # If the variable 'source' is not defined, the cookie was probably not valid.
+    if 'source' not in locals():  # If the variable 'source' is not defined, the cookie was probably not valid.
         raise Exception("Invalid JSESSIONID")
 
     print("✓ (%.3fs)" % (time.time() - initTime))
-    return [source, viewstate, submit] # Return a list that contains the extracted parameters.
+    return [source, viewstate, submit]  # Return a list that contains the extracted parameters.
+
 
 # Function that sends the HTTP POST request to the server and retrieves the raw data of the calendar.
 # The raw text response is returned.
@@ -79,8 +81,8 @@ def postCalendarRequest(jsessionid, cookies):
     start = int(datetime.timestamp(datetime(e.year if e.month >= 9 else e.year - 1, 9, 1)) * 1000)
     end = int(datetime.timestamp(datetime(e.year + 1 if e.month >= 9 else e.year, 6, 1)) * 1000)
 
-    #start = 1598914597000
-    #end = 1693522597000
+    # start = 1598914597000
+    # end = 1693522597000
 
     source = cookies[0]
     view = cookies[1]
@@ -110,7 +112,7 @@ def postCalendarRequest(jsessionid, cookies):
         locationInfo = connect.postRequest(locationPayload, jsessionid).text
 
         # process response and filter out html code and garbage.
-        removeCharacters = ['\t', '\n', 'class="enlaceUniovi"', '</li>', '</a>', '<a href=', 'target="_blank">' , '"']
+        removeCharacters = ['\t', '\n', 'class="enlaceUniovi"', '</li>', '</a>', '<a href=', 'target="_blank">', '"']
         for char in removeCharacters:
             locationInfo = locationInfo.replace(char, '')
 
@@ -125,19 +127,18 @@ def postCalendarRequest(jsessionid, cookies):
     return result, locations
 
 
-
 # Parse the correct class name for each entry.
 def parseLocation(loc, codEspacio):
 
     if not enableLocationParsing: return loc
 
-    try: buildingCode = codEspacio.split('.')[2] # current building code
-    except IndexError: # should never happen, but this way it's more robust.
+    try: buildingCode = codEspacio.split('.')[2]  # current building code
+    except IndexError:  # should never happen, but this way it's more robust.
         return loc
 
     # if location isn't in "Milla del Conocimiento Gijón" or building is outside of EPI Gijón, return location as is.
     floor = codEspacio.split('.')[4]
-    if not codEspacio[:5] == "02.01" or not buildingCode in buildingCodes: return loc
+    if not codEspacio[:5] == "02.01" or buildingCode not in buildingCodes: return loc
 
     # Aula AS-1 through Aula AS-11
     result = re.search(r'02.01.02.00.P1.00.(0[1-9]|1[0-1])', codEspacio)
@@ -165,7 +166,7 @@ def parseLocation(loc, codEspacio):
     result = re.search(r'^AULA DO[ ]?-1?\d[A-B]?$', loc.upper())
     if bool(result):
         doFinal = result.group(0).replace('AULA ', '').replace(' ', '')
-        if doFinal[-2:] == "10": # DO-10 can be DO-10A or DO-10B.
+        if doFinal[-2:] == "10":  # DO-10 can be DO-10A or DO-10B.
             return f"{doFinal}{loc[-1]}"
         return doFinal
 
@@ -179,9 +180,9 @@ def parseLocation(loc, codEspacio):
     if bool(result):
         return f"EP-{loc.split(' ')[-1].upper()}"
 
-
     # If no match is found, return the original name including building and floor.
     return f"{buildingCodes[buildingCode]}-{loc} ({floor})"
+
 
 # Parse the correct "class type" for each entry.
 # Also parses the group for each entry except for "Clase Expositiva".
@@ -190,7 +191,7 @@ def parseClassType(type):
 
     if not enableClassTypeParsing: return type
 
-    typeL = type.lower().replace('.', '') # lowercase and remove dots so it's easier to parse.
+    typeL = type.lower().replace('.', '')  # lowercase and remove dots so it's easier to parse.
     classGroup = type.replace('-', ' ').rsplit()[-1].strip('0').upper()
 
     # detect bilingual classes and replace with GB flag emoji.
@@ -204,14 +205,15 @@ def parseClassType(type):
     if "lab" in typeL or typeL == "pl": return f"PL{classGroup}"
     if "aula" in typeL or typeL == "pa": return f"PA{classGroup}"
 
-    return type # If the class type is not recognized, return the original string.
+    return type  # If the class type is not recognized, return the original string.
+
 
 def generateCalendar(rawResponse, locations):
 
     print("Parsing data and creating calendar...", end=" ", flush=True)
     initTime = time.time()
 
-    stats = { # dictionary to store stats about the calendar. it's only used if stats are enabled.
+    stats = {  # dictionary to store stats about the calendar. it's only used if stats are enabled.
         "hours": 0,
         "classes": -1,
         "days": {},
@@ -263,7 +265,7 @@ def generateCalendar(rawResponse, locations):
         if enableLinks: description += f" ({locations[loc.lower()]})"
 
         # Update the statistics.
-        stats["classes"] += 1 # 'classes' is displayed even if stats are disabled.
+        stats["classes"] += 1  # 'classes' is displayed even if stats are disabled.
         if enableStatistics:
             hours = int(end_hour.split(':')[0]) - int(start_hour.split(':')[0])
             minutes = int(end_hour.split(':')[1]) - int(start_hour.split(':')[1])
@@ -327,6 +329,7 @@ def generateCalendar(rawResponse, locations):
 
     return stats
 
+
 def main(argv) -> int:
     global enableLocationParsing, enableClassTypeParsing, enableStatistics, filename, icsMode, enableLinks, dryRun
     enableLocationParsing = True
@@ -336,7 +339,7 @@ def main(argv) -> int:
     icsMode = True
     dryRun = False
 
-    session = "" # JSESSIONID cookie value.
+    session = ""  # JSESSIONID cookie value.
 
     # Read flags from arguments.
     if "--help" in argv or "-h" in argv:
@@ -357,7 +360,7 @@ def main(argv) -> int:
         if argv[i] == "--disable-class-type-parsing": enableClassTypeParsing = False
         if argv[i] == "--disable-links": enableLinks = False
         if argv[i] == "--csv": icsMode = False
-        if argv[i] == "-o" or argv[i] == "--output-file" : filename = argv[i+1]
+        if argv[i] == "-o" or argv[i] == "--output-file": filename = argv[i + 1]
         if argv[i] == "-s" or argv[i] == "--stats" or argv[i] == "--enable-statistics": enableStatistics = True
         if argv[i] == "--dry-run": dryRun = True
         if utils.verifyCookieStructure(argv[i]): session = argv[i]
@@ -407,18 +410,16 @@ def main(argv) -> int:
         for classType in stats["classTypes"]:
             print("\t\t%s: %d (%.2fh)" % (classType[0], classType[1][0], classType[1][1]))
 
-
         print("\n\tLocations:")
         for location in stats["locations"]:
             print("\t\t%s: %d (%.2fh)" % (location[0], location[1][0], location[1][1]))
-
 
         print("\n\tSubjects:")
         for subject in stats["subjects"]:
             print("\t\t%s: %d (%.2fh)" % (subject, stats["subjects"][subject][0], stats["subjects"][subject][1]))
 
-
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv))
