@@ -19,12 +19,14 @@ filename = "Calendario"  # Can be changed through "-o" flag.
 
 
 def commence(msg):
-    print(f"{msg}...", end=" ", flush=True)
+    global status
+    status = msg
+    print(f"{msg} [ ]", end="\r", flush=True)
     return time.time()
 
 
 def finalize(init):
-    print("✓ (%.3fs)" % (time.time() - init))
+    print(f"{status} [✓] ({(time.time() - init):.3f}s)")
 
 
 class Class:
@@ -138,7 +140,6 @@ def postCalendarRequest(jsessionid, cookies):
 
 
 def obtainEvents(rawResponse, locations):
-
     init = commence("Parsing events")
 
     # Separate the events from its XML context.
@@ -342,7 +343,7 @@ def main(argv) -> int:
         classes = obtainEvents(rawResponse, locations)
         if not dryRun: generateOutput(classes)
     except Exception as e:
-        print(f"× ({e})")
+        print(f"{status} [×] ({e})")
         return 2 if e.__class__ == AttributeError else 1
 
     print("\n%s, took %.3fs (%d events parsed)" % ("Dry run completed" if dryRun else "Calendar generated", time.time() - startTime, len(classes)))
