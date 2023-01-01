@@ -28,7 +28,7 @@ def finalize(init):
 
 
 class Class:
-    def __init__(self, uid, title, start, end, location, description, classType):
+    def __init__(self, uid, title, start, end, location, description, classType, subject):
         self.uid = uid
         self.title = title
         self.start_raw = start
@@ -36,6 +36,7 @@ class Class:
         self.location = location
         self.description = description
         self.classType = classType
+        self.subject = subject
 
         self.date = start.split(' ')[0]
         self.start = start.split(' ')[1]
@@ -169,7 +170,7 @@ def obtainEvents(rawResponse, locations):
         location = parse.parseLocation(loc, code) if enableLocationParsing else loc
         if enableLinks: description += f" ({locations[loc.lower()]})"
 
-        classes.append(Class(uid, title, start, end, location, description, classType))
+        classes.append(Class(uid, title, start, end, location, description, classType, titleSplit[0]))
 
     finalize(init)
     return classes
@@ -220,7 +221,7 @@ def printStats(classes):
         date = event.date
         location = event.location
         classType = event.classType
-        subject = event.title.split(" (")[0]
+        subject = event.subject
 
         hours = int(end.split(':')[0]) - int(start.split(':')[0])
         minutes = int(end.split(':')[1]) - int(start.split(':')[1])
