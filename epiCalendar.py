@@ -259,10 +259,8 @@ def printStats(classes):
     print("\nStatistics:")
     print("\tTotal hours: %.2f" % stats["hours"])
     print("\tDays of attendance: %d" % len(stats["days"]))
-
     print("\tAverage hours per day: %.2f" % (stats["hours"] / len(stats["days"])))
     print("\tMax hours per day: %.2f" % max(stats["days"].values()))
-
     print("\tFirst quarter: %d classes (%.2f hours)" % (stats["Q1"][0], stats["Q1"][1]))
     print("\tSecond quarter: %d classes (%.2f hours)" % (stats["Q2"][0], stats["Q2"][1]))
 
@@ -284,26 +282,26 @@ def printStats(classes):
 
 
 def main(argv) -> int:
-    global locationParsing, classTypeParsing, stats, icsMode, links, dryRun, separate, description
+    global locationParsing, classTypeParsing, stats, icsMode, links, separate, description
 
     parser = argparse.ArgumentParser()
     parser.add_argument("session", metavar="JSESSIONID", help="JSESSIONID cookie value.")
     parser.add_argument("--location", choices=["on", "off"], default="on", help="Enables or disables the parsing of the location of the class. Default is 'on'.")
     parser.add_argument("--class-type", choices=["on", "off"], default="on", help="Enables or disables the parsing of the class type of the class. Default is 'on'.")
     parser.add_argument("--links", choices=["on", "off"], default="on", help="Enables or disables placing links of rooms in the description of the events. Default is 'on'.")
-    parser.add_argument("--statistics", "-s", "--stats", choices=["on", "off"], default="off", help="Returns various statistics about all the events collected. Default is 'off'.")
+    parser.add_argument("--statistics", "-s", "--stats", action="store_true", help="Returns various statistics about all the events collected. Default is 'off'.")
     parser.add_argument("--format", choices=["csv", "ics"], default="ics", help="Sets the output file format. Default is 'ics'.")
     parser.add_argument("--dry-run", action='store_true', help="Disables the generation of files.")
     parser.add_argument("--output-file", "-o", "--filename", "-f", default="Calendario", help="Sets the name of the output file.")
     parser.add_argument("--separate-by", choices=["subject", "classType"], help="Creates separate files depending on the option selected. Default is 'off'.")
     parser.add_argument("--description", choices=["on", "off"], default="on", help="Enables or disables the description of the events. Default is 'on'.")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     locationParsing = args.location == "on"
     classTypeParsing = args.class_type == "on"
     links = args.links == "on"
-    stats = args.statistics == "on"
+    stats = args.statistics
     icsMode = args.format == "ics"
     dryRun = args.dry_run
     filename = args.output_file
@@ -323,7 +321,7 @@ def main(argv) -> int:
         if not dryRun:
             if separate is not None:
                 for element in list(set([getattr(c, separate) for c in classes])):
-                    generateOutput([c for c in classes if getattr(c, separate) == element], filename + "_" + element.replace(' ', ''))
+                    generateOutput([c for c in classes if getattr(c, separate) == element], f"{filename}_{element.replace(' ', '')}")
             else: generateOutput(classes, filename)
     except Exception as e:
         print(f"{status} [×]")
@@ -337,4 +335,4 @@ def main(argv) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    sys.exit(main(sys.argv[1:]))

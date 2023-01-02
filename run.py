@@ -10,14 +10,15 @@ import utils
 app = Flask(__name__, static_folder='./build', static_url_path='/', template_folder='./build')
 Talisman(app, content_security_policy=None)
 
-defaultFilename = epiCalendar.filename
 debug = os.environ.get('FLASK_ENV') == 'development'
 
-@app.route('/', methods = ['GET'])
+
+@app.route('/', methods=['GET'])
 def index():
     return serve()
 
-@app.route('/', methods = ['POST'])
+
+@app.route('/', methods=['POST'])
 def form_post():
     if debug: print(f"[DEBUG] POST data received from React: {request.form}")
 
@@ -37,18 +38,11 @@ def form_post():
         print("[DEBUG] [ERROR] Expired cookie submited.")
         return serve(slug="ERROR: cookie inválida.")
 
-    argv = ['epiCalendar.py', jsessionid]
-
-    if not location: argv.append('--disable-location-parsing')
-    if not classType: argv.append('--disable-class-type-parsing')
-
     uuidStr = str(uuid.uuid4())
-    argv.append('-o')
-    argv.append(uuidStr)
+    argv = [jsessionid, '--location', 'on' if location else 'off', '--class-type', 'on' if classType else 'off', '-o', uuidStr, '--format', extension[1:]]
 
     backendFilename = uuidStr + extension
     downloadFilename = filename + extension
-    if extension == ".csv": argv.append('--csv')
 
     if debug:
         print(f"[DEBUG] UUID: {uuidStr}")
@@ -59,7 +53,7 @@ def form_post():
         if debug: print(f"[DEBUG] Attempting to serve {backendFilename} as {downloadFilename}.")
         target = send_file(backendFilename, as_attachment=True, attachment_filename=downloadFilename)
         if os.path.exists(backendFilename): os.remove(backendFilename)
-        if debug: print(f"[DEBUG] File served.")
+        if debug: print("[DEBUG] File served.")
         return target
     elif exitCode == 2:
         if debug: print("[DEBUG] [ERROR] ¿No calendar events?")
