@@ -6,7 +6,6 @@ import json
 import re
 import sys
 import time
-import traceback
 import urllib.parse
 from datetime import datetime  # needed to convert academic years to unix timestamps
 from ics import (Calendar, Event)  # needed to save calendar in .ics format (iCalendar)
@@ -15,6 +14,8 @@ from ics import (Calendar, Event)  # needed to save calendar in .ics format (iCa
 import connect
 import parse
 import utils
+
+__version__ = "203"
 
 
 def commence(msg):
@@ -285,16 +286,17 @@ def main(argv) -> int:
     global locationParsing, classTypeParsing, stats, icsMode, links, separate, description
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("session", metavar="JSESSIONID", help="JSESSIONID cookie value.")
-    parser.add_argument("--location", choices=["on", "off"], default="on", help="Enables or disables the parsing of the location of the class. Default is 'on'.")
-    parser.add_argument("--class-type", choices=["on", "off"], default="on", help="Enables or disables the parsing of the class type of the class. Default is 'on'.")
-    parser.add_argument("--links", choices=["on", "off"], default="on", help="Enables or disables placing links of rooms in the description of the events. Default is 'on'.")
-    parser.add_argument("--statistics", "-s", "--stats", action="store_true", help="Returns various statistics about all the events collected. Default is 'off'.")
-    parser.add_argument("--format", choices=["csv", "ics"], default="ics", help="Sets the output file format. Default is 'ics'.")
-    parser.add_argument("--dry-run", action='store_true', help="Disables the generation of files.")
-    parser.add_argument("--output-file", "-o", "--filename", "-f", default="Calendario", help="Sets the name of the output file.")
-    parser.add_argument("--separate-by", choices=["subject", "classType"], help="Creates separate files depending on the option selected. Default is 'off'.")
-    parser.add_argument("--description", choices=["on", "off"], default="on", help="Enables or disables the description of the events. Default is 'on'.")
+    parser.add_argument("session", metavar="JSESSIONID", help="JSESSIONID cookie value")
+    parser.add_argument("--location", choices=["on", "off"], default="on", help="enables or disables the parsing of the location of the class (default: 'on')")
+    parser.add_argument("--class-type", choices=["on", "off"], default="on", help="enables or disables the parsing of the class type of the class (default: 'on')")
+    parser.add_argument("--links", choices=["on", "off"], default="on", help="enables or disables placing links of rooms in the description of the events (default: 'on')")
+    parser.add_argument("--statistics", "-s", "--stats", action="store_true", help="returns various statistics about all the events collected (default: 'off')")
+    parser.add_argument("--format", choices=["csv", "ics"], default="ics", help="sets the output file format (default: 'ics')")
+    parser.add_argument("--dry-run", action='store_true', help="disables the generation of files (default: 'off')")
+    parser.add_argument("--output-file", "-o", "--filename", "-f", default="Calendario", help="sets the name of the output file (default: 'Calendario')")
+    parser.add_argument("--separate-by", choices=["subject", "classType"], help="creates separate files depending on the option selected (default: 'off')")
+    parser.add_argument("--description", choices=["on", "off"], default="on", help="enables or disables the description of the events (default: 'on')")
+    parser.add_argument("-v", "--version", action="version", version=f"epiCalendar c{__version__} by Juan Mier (mier@mier.info)")
 
     args = parser.parse_args(argv)
 
@@ -324,8 +326,7 @@ def main(argv) -> int:
                     generateOutput([c for c in classes if getattr(c, separate) == element], f"{filename}_{element.replace(' ', '')}")
             else: generateOutput(classes, filename)
     except Exception as e:
-        print(f"{status} [×]")
-        traceback.print_exc()
+        print(f"{status} [×] ({e})")
         return 2 if e.__class__ == AttributeError else 1
 
     print("\nScript finished, %d events parsed." % len(classes))

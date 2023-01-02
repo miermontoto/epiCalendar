@@ -1,5 +1,7 @@
 import re
 
+__version__ = "2.1"
+
 buildingCodes = {  # building codes for 'Milla del Conocimiento' (Gijón 02.01) sourced from gis.uniovi.es
     '01': 'AN',
     '02': 'AS',

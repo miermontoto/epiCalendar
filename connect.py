@@ -1,5 +1,6 @@
 import requests
 
+__version__ = "1.0"
 url = 'https://sies.uniovi.es/serviciosacademicos/web/expedientes/calendario.xhtml'
 
 
