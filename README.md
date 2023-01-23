@@ -78,7 +78,7 @@ Por defecto, el script genera archivos en formato iCalendar (extensión `.ics`),
 Por defecto, se obtiene el calendario del curso actual. Sin embargo, se pueden obtener todos los eventos de años anteriores, o incluso especificar si se desea obtener el primer o segundo cuatrimestre.
 
 - Para especificar los años, se hace uso de la flag `--years` (ej: `python epiCalendar.py --years 21-22`).
-- Para especificar el cuatrimestre, se hace uso de la flag `--term` (ej: python epicalendar.py --term q1).
+- Para especificar el cuatrimestre, se hace uso de la flag `--term` (ej: `python epicalendar.py --term q1`).
 
 ### Otros parámetros
 Se puede encontrar una lista de todos los parámetros haciendo uso de la flag de ayuda `-h`: `python epiCalendar.py -h`.
