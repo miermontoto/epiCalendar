@@ -15,7 +15,7 @@ import connect
 import parse
 import utils
 
-__version__ = "203"
+__version__ = "206"
 
 
 def commence(msg):
@@ -87,15 +87,23 @@ def extractCookies(response):
 
 # Function that sends the HTTP POST request to the server and retrieves the raw data of the calendar.
 # The raw text response is returned.
-def postCalendarRequest(jsessionid, cookies):
+def postCalendarRequest(jsessionid, cookies, options):
     init = commence("Obtaining raw calendar data")
 
-    e = datetime.now()
-    start = int(datetime.timestamp(datetime(e.year if e.month >= 9 else e.year - 1, 9, 1)) * 1000)
-    end = int(datetime.timestamp(datetime(e.year + 1 if e.month >= 9 else e.year, 6, 1)) * 1000)
+    if options["years"] == "auto":
+        e = datetime.now()
+        start = int(datetime.timestamp(datetime(e.year if e.month >= 9 else e.year - 1, 9, 1)) * 1000)
+        end = int(datetime.timestamp(datetime(e.year + 1 if e.month >= 9 else e.year, 6, 1)) * 1000)
+    elif options["years"] == "all":
+        start = int(datetime.timestamp(datetime(2000, 9, 1)) * 1000)
+        end = int(datetime.timestamp(datetime(2100, 6, 1)) * 1000)
+    else:
+        start = int(datetime.timestamp(int(f"20{options['years'].split('-')[0]}"), 9, 1) * 1000)
+        end = int(datetime.timestamp(int(f"20{options['years'].split('-')[1]}"), 6, 1) * 1000)
 
-    # start = 1598914597000
-    # end = 1693522597000
+    if options["terms"] != "all":
+        if options["terms"].lower() == "q1": end -= 13042800000
+        else: start += 10544400000
 
     source = cookies[0]
     view = cookies[1]
@@ -118,7 +126,7 @@ def postCalendarRequest(jsessionid, cookies):
     except AttributeError: raise AttributeError("Empty calendar")
 
     locations = {}
-    if locationParsing or links:
+    if options["locationParsing"] or options["links"]:
         # obtain links for each event location.
         # links are used to obtain room codes, which include city, building and other important info.
         locationPayload = f"javax.faces.partial.ajax=true&javax.faces.source={source}&javax.faces.partial.execute={source}&javax.faces.partial.render={source[:10:]}eventDetails+{source[:10:]}aulas_url&javax.faces.behaviour.event=eventSelect&javax.faces.partial.event=eventSelect&{source}_selectedEventId={sampleId}&{submit}_SUBMIT=1&javax.faces.ViewState={view}"
@@ -140,8 +148,13 @@ def postCalendarRequest(jsessionid, cookies):
     return result, locations
 
 
-def obtainEvents(rawResponse, locations):
+def obtainEvents(rawResponse, locations, options):
     init = commence("Parsing events")
+
+    description = options['description']
+    links = options['links']
+    classTypeParsing = options['classTypeParsing']
+    locationParsing = options['locationParsing']
 
     data = json.loads(rawResponse.split('[{"events" : ')[1].split('}]]')[0])
     classes = []
@@ -167,30 +180,32 @@ def obtainEvents(rawResponse, locations):
     return classes
 
 
-def generateOutput(classes, filename):
-    init = commence(f"Generating output ({filename}.{'ics' if icsMode else 'csv'})")
+def generateOutput(classes, filename, format):
+    name = f"{filename}.{format}"
+    init = commence(f"Generating output ({name})")
+
+    icsMode = format == "ics"
 
     # Generate the output file.
     if icsMode: c = Calendar()
     else:
-        g = open(filename + ".csv", "w")
+        g = open(name, "w")
         g.write("Subject,Start Date,Start Time,End Date,End Time,Location,Description\n")
 
     # Write each event to the file.
     for event in classes:
         if icsMode:
-            e = Event(name=event.title, begin=event.start_raw, end=event.end_raw, description=event.description, location=event.location, uid=event.uid)
-            c.events.add(e)
+            c.events.add(Event(name=event.title, begin=event.start_raw, end=event.end_raw,
+                               description=event.description, location=event.location, uid=event.uid))
         else:
-            csv_line = f"{event.title},{event.date},{event.start},{event.date},{event.end},{event.location},{event.description}\n"
-            g.write(csv_line)
+            g.write(f"{event.title},{event.date},{event.start},{event.date},{event.end},\
+                      {event.location},{event.description}\n")
 
     # Write the file to disk.
     if icsMode:
-        with open(filename + ".ics", "w") as f:
+        with open(name, "w") as f:
             for i in c.serialize_iter():
-                if "DTSTART" in i.strip() or "DTEND" in i.strip():
-                    f.write(i.replace('Z', ''))
+                if bool(re.search(r'DT((START)|(END)):', i.strip())): f.write(i.replace('Z', ''))
                 else: f.write(i)
     else: g.close()
 
@@ -201,90 +216,79 @@ def printStats(classes):
     stats = {
         "hours": 0,
         "days": {},
+        "days_gaps": {},
         "classTypes": {},
         "locations": {},
         "subjects": {},
-        "perHours": {},
         "Q1": [0, 0],
         "Q2": [0, 0]
     }
 
     for event in classes:
-        start = event.start
-        end = event.end
         date = event.date
         location = event.location
         classType = event.classType
         subject = event.subject
 
-        hours = int(end.split(':')[0]) - int(start.split(':')[0])
-        minutes = int(end.split(':')[1]) - int(start.split(':')[1])
+        hours = int(event.end.split(':')[0]) - int(event.start.split(':')[0])
+        minutes = int(event.end.split(':')[1]) - int(event.start.split(':')[1])
         hours = hours + minutes / 60
         stats["hours"] += hours
 
-        if classType not in stats["classTypes"]:
-            stats["classTypes"][classType] = [0, 0]
+        for key, value in [("classTypes", classType), ("locations", location), ("subjects", subject)]:
+            if value not in stats[key]: stats[key][value] = [0, 0]
+            stats[key][value][0] += 1
+            stats[key][value][1] += hours
 
-        if location not in stats["locations"]:
-            stats["locations"][location] = [0, 0]
-
-        if date not in stats["days"]:
-            stats["days"][date] = 0
-
-        if subject not in stats["subjects"]:
-            stats["subjects"][subject] = [0, 0]
-
-        if hours not in stats["perHours"]:
-            stats["perHours"][hours] = 0
-
-        stats["classTypes"][classType][0] += 1
-        stats["classTypes"][classType][1] += hours
-        stats["locations"][location][0] += 1
-        stats["locations"][location][1] += hours
+        if date not in stats["days"]: stats["days"][date] = 0
         stats["days"][date] += hours
-        stats["subjects"][subject][0] += 1
-        stats["subjects"][subject][1] += hours
-        stats["perHours"][hours] += 1
 
-        if int(date.split('-')[1]) >= 9:
-            stats["Q1"][0] += 1
-            stats["Q1"][1] += hours
-        else:
-            stats["Q2"][0] += 1
-            stats["Q2"][1] += hours
+        quarter = "Q1" if int(date.split('-')[1]) >= 9 else "Q2"
+        stats[quarter][0] += 1
+        stats[quarter][1] += hours
 
     # Sort the class types and locations by number of occurrences.
-    stats["classTypes"] = sorted(stats["classTypes"].items(), key=lambda x: x[1], reverse=True)
-    stats["locations"] = sorted(stats["locations"].items(), key=lambda x: x[1], reverse=True)
+    for key in ["classTypes", "locations"]:
+        stats[key] = sorted(stats[key].items(), key=lambda x: x[1][0], reverse=True)
+
+    # Sort the days by date.
+    stats["days"] = dict(sorted(stats["days"].items(), key=lambda x: x[0]))
+
+    # Sort the subjects alphabetically.
+    stats["subjects"] = dict(sorted(stats["subjects"].items(), key=lambda x: x[0]))
+
+    for day in stats["days"].keys():
+        events = [c for c in classes if c.date == day]
+
+        earliest = min(events, key=lambda x: x.start_raw)
+        latest = max(events, key=lambda x: x.end_raw)
+
+        earliest_hours = int(earliest.start.split(':')[0]) + int(earliest.start.split(':')[1]) / 60
+        latest_hours = int(latest.end.split(':')[0]) + int(latest.end.split(':')[1]) / 60
+        time = latest_hours - earliest_hours
+        stats["days_gaps"][day] = time
 
     print("\nStatistics:")
-    print("\tTotal hours: %.2f" % stats["hours"])
-    print("\tDays of attendance: %d" % len(stats["days"]))
-    print("\tAverage hours per day: %.2f" % (stats["hours"] / len(stats["days"])))
-    print("\tMax hours per day: %.2f" % max(stats["days"].values()))
-    print("\tFirst quarter: %d classes (%.2f hours)" % (stats["Q1"][0], stats["Q1"][1]))
-    print("\tSecond quarter: %d classes (%.2f hours)" % (stats["Q2"][0], stats["Q2"][1]))
-
-    print("\n\tClasses per number of hours:")
-    for hour in sorted(stats["perHours"].keys()):
-        print("\t\t%d: %d" % (hour, stats["perHours"][hour]))
+    print(f"\tTotal hours: {stats['hours']}h pure, {sum(stats['days_gaps'].values())}h total")
+    print(f"\tAttendance: {len(stats['days'])} days, {sum(stats['days_gaps'].values()) / len(stats['days']):.2f}h on average")
+    print(f"\tMax hours per day: {max(stats['days_gaps'].values())}h ({', '.join([c for c in stats['days_gaps'] if stats['days_gaps'][c] == max(stats['days_gaps'].values())])})")
+    print(f"\tFirst quarter: {stats['Q1'][0]} classes, {stats['Q1'][1]}h")
+    print(f"\tSecond quarter: {stats['Q2'][0]} classes, {stats['Q2'][1]}h")
 
     print("\n\tClass types:")
     for classType in stats["classTypes"]:
-        print("\t\t%s: %d (%.2fh)" % (classType[0], classType[1][0], classType[1][1]))
+        print(f"\t\t{classType[0]}: {classType[1][0]} ({classType[1][1]}h)")
 
     print("\n\tLocations:")
     for location in stats["locations"]:
-        print("\t\t%s: %d (%.2fh)" % (location[0], location[1][0], location[1][1]))
+        print(f"\t\t{location[0]}: {location[1][0]} ({location[1][1]}h)")
 
     print("\n\tSubjects:")
     for subject in stats["subjects"]:
-        print("\t\t%s: %d (%.2fh)" % (subject, stats["subjects"][subject][0], stats["subjects"][subject][1]))
+        print(f"\t\t{subject}: {stats['subjects'][subject][0]} ({stats['subjects'][subject][1]}h)")
 
 
 def main(argv) -> int:
-    global locationParsing, classTypeParsing, stats, icsMode, links, separate, description
-
     parser = argparse.ArgumentParser()
     parser.add_argument("session", metavar="JSESSIONID", help="JSESSIONID cookie value")
     parser.add_argument("--location", choices=["on", "off"], default="on", help="enables or disables the parsing of the location of the class (default: 'on')")
@@ -297,19 +301,32 @@ def main(argv) -> int:
     parser.add_argument("--separate-by", choices=["subject", "classType"], help="creates separate files depending on the option selected (default: 'off')")
     parser.add_argument("--description", choices=["on", "off"], default="on", help="enables or disables the description of the events (default: 'on')")
     parser.add_argument("-v", "--version", action="version", version=f"epiCalendar c{__version__} by Juan Mier (mier@mier.info)")
+    parser.add_argument("--years", "-y", default="auto", help="sets the range of years to be parsed. format: yy-yy (default: auto, eg: 20-21)")
+    parser.add_argument("--term", "-t", default="all", help="sets the terms to be parsed.", choices=["q1", "q2", "all"])
 
     args = parser.parse_args(argv)
 
-    locationParsing = args.location == "on"
-    classTypeParsing = args.class_type == "on"
+    location = args.location == "on"
+    classType = args.class_type == "on"
     links = args.links == "on"
     stats = args.statistics
-    icsMode = args.format == "ics"
+    format = args.format
     dryRun = args.dry_run
     filename = args.output_file
     session = args.session
     separate = args.separate_by
     description = args.description == "on"
+    years = args.years
+    terms = args.term
+
+    options = {
+        "locationParsing": location,
+        "classTypeParsing": classType,
+        "links": links,
+        "description": description,
+        "years": years,
+        "terms": terms
+    }
 
     # If the JSESSIONID is not valid, exit.
     if not utils.verifyCookieStructure(session):
@@ -318,13 +335,13 @@ def main(argv) -> int:
 
     try:
         cookies = extractCookies(getFirstRequest(session))
-        rawResponse, locations = postCalendarRequest(session, cookies)
-        classes = obtainEvents(rawResponse, locations)
+        rawResponse, locations = postCalendarRequest(session, cookies, options)
+        classes = obtainEvents(rawResponse, locations, options)
         if not dryRun:
             if separate is not None:
                 for element in list(set([getattr(c, separate) for c in classes])):
-                    generateOutput([c for c in classes if getattr(c, separate) == element], f"{filename}_{element.replace(' ', '')}")
-            else: generateOutput(classes, filename)
+                    generateOutput([c for c in classes if getattr(c, separate) == element], f"{filename}_{element.replace(' ', '')}", format)
+            else: generateOutput(classes, filename, format)
     except Exception as e:
         print(f"{status} [×] ({e})")
         return 2 if e.__class__ == AttributeError else 1
