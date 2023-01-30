@@ -12,8 +12,8 @@ from ics import (Calendar, Event)  # needed to save calendar in .ics format (iCa
 
 # import custom modules
 import connect
+import cookie
 import parse
-import utils
 
 __version__ = "206"
 
@@ -329,7 +329,7 @@ def main(argv) -> int:
     }
 
     # If the JSESSIONID is not valid, exit.
-    if not utils.verifyCookieStructure(session):
+    if not cookie.verifyStructure(session):
         print("Invalid JSESSIONID.")
         return 1
 

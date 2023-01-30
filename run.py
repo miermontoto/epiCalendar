@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, send_file
 from flask_talisman import Talisman
 
 import epiCalendar
-import utils
+import cookie
 
 app = Flask(__name__, static_folder='./build', static_url_path='/', template_folder='./build')
 Talisman(app, content_security_policy=None)
@@ -34,7 +34,7 @@ def form_post():
         print(f"[DEBUG] Class type parsing: {classType}")
         print(f"[DEBUG] iCalendar mode: {extension == '.ics'}")
 
-    if not utils.verifyCookieExpiration(jsessionid):
+    if not cookie.verifyExpiration(jsessionid):
         print("[DEBUG] [ERROR] Expired cookie submited.")
         return serve(slug="ERROR: cookie inválida.")
 
