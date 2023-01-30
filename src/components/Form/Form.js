@@ -69,7 +69,7 @@ const Form = (props) => {
               onChange={codeChangeHandler}
               onBlur={codeBlurHandler}
               value={enteredCode}
-              placeholder="0000XXXXXXXXXXXXXXXXXXXXXXX:1dXXXXXXX"
+              placeholder="0000XXXXXXXXXXXXXXXXXXXXXXX:1XXXXXXXX"
             />
             {codeHasError && (
               <React.Fragment>
