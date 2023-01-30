@@ -31,8 +31,7 @@ const Form = (props) => {
       value.charAt(2) === "0" &&
       value.charAt(3) === "0" &&
       value.charAt(27) === ":" &&
-      value.charAt(28) === "1" &&
-      value.charAt(29) === "d"
+      value.charAt(28) === "1"
   );
 
   // Variable for the validity of the form
