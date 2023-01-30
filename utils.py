@@ -3,7 +3,7 @@ import sys
 
 import connect
 
-__version__ = "1.1"
+__version__ = "1.2"
 
 
 # Verifies if the cookie is valid server-side.
@@ -14,9 +14,9 @@ def verifyCookieExpiration(jsessionid) -> bool:
 
 
 # Quick cookie verification.
-# Checks if the structure of the cookie matches '0000XXXXXXXXXXXXXXXXXXXXXXX:1dXXXXXXX'.
+# Checks if the structure of the cookie matches '0000XXXXXXXXXXXXXXXXXXXXXXX:1XXXXXXXX'.
 def verifyCookieStructure(cookie) -> bool:
-    return re.compile(r'^0000.{23}:1.{8}$').match(cookie) is not None and cookie != "0000XXXXXXXXXXXXXXXXXXXXXXX:1dXXXXXXX"
+    return re.compile(r'^0000.{23}:1.{8}$').match(cookie) is not None and cookie != "0000XXXXXXXXXXXXXXXXXXXXXXX:1XXXXXXXX"
 
 
 if __name__ == "__main__":
