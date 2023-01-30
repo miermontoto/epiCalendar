@@ -16,7 +16,7 @@ def verifyCookieExpiration(jsessionid) -> bool:
 # Quick cookie verification.
 # Checks if the structure of the cookie matches '0000XXXXXXXXXXXXXXXXXXXXXXX:1dXXXXXXX'.
 def verifyCookieStructure(cookie) -> bool:
-    return re.compile(r'^0000.{23}:1d.{7}$').match(cookie) is not None and cookie != "0000XXXXXXXXXXXXXXXXXXXXXXX:1dXXXXXXX"
+    return re.compile(r'^0000.{23}:1.{8}$').match(cookie) is not None and cookie != "0000XXXXXXXXXXXXXXXXXXXXXXX:1dXXXXXXX"
 
 
 if __name__ == "__main__":
