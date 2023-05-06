@@ -8,12 +8,12 @@ import epiCalendar
 import utils as utils
 
 
-class testUtils(unittest.TestCase):
+class test_utils(unittest.TestCase):
     def test_verifyCookieStrucutre(self):
         self.assertFalse(utils.verifyCookieStructure(""))
         self.assertFalse(utils.verifyCookieStructure("a"))
         self.assertFalse(utils.verifyCookieStructure("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))
-        self.assertFalse(utils.verifyCookieStructure("00000dlJBa0_91pHyD9bDHAW5VO:118eurd6"))
+        self.assertTrue(utils.verifyCookieStructure("00000dlJBa0_91pHyD9bDHAW5VO:118eurd6"))
         self.assertFalse(utils.verifyCookieStructure("00000dlJBa0_91pHyD9bDHAW5VO:1d18eurd6x"))
         self.assertFalse(utils.verifyCookieStructure("0000dlJBa0_91pHyD9bDHAW5VO:1d8eurd6"))
         self.assertFalse(utils.verifyCookieStructure("00010dlJBa0_91pHyD9bDHAW5VO:1d8eurd6"))
@@ -27,19 +27,20 @@ class testUtils(unittest.TestCase):
         self.assertTrue(utils.verifyCookieExpiration(jsessionid))
 
 
-class testConnect(unittest.TestCase):
+class test_connect(unittest.TestCase):
     def test_firstRequest(self):
-        r = connect.firstRequest(jsessionid)
+        r = connect.first_request(jsessionid)
         self.assertEqual(r.status_code, 200)
         self.assertIn('<div id="j_id', r.text)
         self.assertIn('javax.faces.ViewState', r.text)
         self.assertIn('action="/serviciosacademicos/web/expedientes/calendario.xhtml"', r.text)
 
-    def test_postRequest(self):
+    def test_post_request(self):
+        # TODO
         pass
 
 
-class testCalendar(unittest.TestCase):
+class test_calendar(unittest.TestCase):
 
     def test_generate(self):
         options = (
@@ -61,7 +62,7 @@ class testCalendar(unittest.TestCase):
 
         for ext in filetype:
             with self.subTest(ext['case']):
-                numberOfLines = -1
+                lines = -1
                 for case in options:
                     with self.subTest(case=case['case']):
                         remove(case['filename'] + ext['extension'])
@@ -71,10 +72,10 @@ class testCalendar(unittest.TestCase):
                             break
                         self.assertTrue(os.path.exists(case['filename'] + ext['extension']))
                         with open(case['filename'] + ext['extension'], 'r') as f:
-                            linesRead = len(f.readlines())
-                        if not numberOfLines == -1: self.assertEqual(linesRead, numberOfLines)
-                        self.assertNotEqual(linesRead, 0)
-                        numberOfLines = linesRead
+                            lines_read = len(f.readlines())
+                        if lines != -1: self.assertEqual(lines_read, lines)
+                        self.assertNotEqual(lines_read, 0)
+                        lines = lines_read
                         remove(case['filename'] + ext['extension'])
 
 

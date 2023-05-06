@@ -25,37 +25,37 @@ def form_post():
     jsessionid = request.form['jsessionid']
     filename = request.form['filename']
     location = request.form['location'] == "true"
-    classType = request.form['class-type'] == "true"
+    class_type = request.form['class-type'] == "true"
     extension = request.form['extension']
 
     if debug:
         print(f"[DEBUG] Calendar info: {jsessionid} → {filename}{extension}")
         print(f"[DEBUG] Location parsing: {location}")
-        print(f"[DEBUG] Class type parsing: {classType}")
+        print(f"[DEBUG] Class type parsing: {class_type}")
         print(f"[DEBUG] iCalendar mode: {extension == '.ics'}")
 
-    if not cookie.verifyExpiration(jsessionid):
+    if not cookie.verify_expiration(jsessionid):
         print("[DEBUG] [ERROR] Expired cookie submited.")
         return serve(slug="ERROR: cookie inválida.")
 
-    uuidStr = str(uuid.uuid4())
-    argv = [jsessionid, '--location', 'on' if location else 'off', '--class-type', 'on' if classType else 'off', '-o', uuidStr, '--format', extension[1:]]
+    uuid_string = str(uuid.uuid4())
+    argv = [jsessionid, '--location', 'on' if location else 'off', '--class-type', 'on' if class_type else 'off', '-o', uuid_string, '--format', extension[1:]]
 
-    backendFilename = uuidStr + extension
-    downloadFilename = filename + extension
+    backend_filename = uuid_string + extension
+    download_filename = filename + extension
 
     if debug:
-        print(f"[DEBUG] UUID: {uuidStr}")
+        print(f"[DEBUG] UUID: {uuid_string}")
         print(f"[DEBUG] Arguments: {argv}")
 
-    exitCode = epiCalendar.main(argv)
-    if os.path.exists(backendFilename) and exitCode == 0:
-        if debug: print(f"[DEBUG] Attempting to serve {backendFilename} as {downloadFilename}.")
-        target = send_file(backendFilename, as_attachment=True, attachment_filename=downloadFilename)
-        if os.path.exists(backendFilename): os.remove(backendFilename)
+    exit_code = epiCalendar.main(argv)
+    if os.path.exists(backend_filename) and exit_code == 0:
+        if debug: print(f"[DEBUG] Attempting to serve {backend_filename} as {download_filename}.")
+        target = send_file(backend_filename, as_attachment=True, attachment_filename=download_filename)
+        if os.path.exists(backend_filename): os.remove(backend_filename)
         if debug: print("[DEBUG] File served.")
         return target
-    elif exitCode == 2:
+    elif exit_code == 2:
         if debug: print("[DEBUG] [ERROR] ¿No calendar events?")
         return serve(slug="ERROR: No hay eventos en el calendario.")
 

@@ -15,7 +15,22 @@ import connect
 import cookie
 import parse
 
-__version__ = "216"
+__version__ = "236"
+
+
+class ApplicationError(Exception):
+    # Base class for exceptions in this module.
+    pass
+
+
+class ResponseError(ApplicationError):
+    # Invalid response from the server.
+    pass
+
+
+class BadCookieError(ApplicationError):
+    # Invalid cookie introduced by the user.
+    pass
 
 
 def commence(msg):
@@ -30,14 +45,14 @@ def finalize(init):
 
 
 class Class:
-    def __init__(self, uid, title, start, end, location, description, classType, subject):
+    def __init__(self, uid, title, start, end, location, description, class_type, subject):
         self.uid = uid
         self.title = title
         self.start_raw = start
         self.end_raw = end
         self.location = location
         self.description = description
-        self.classType = classType
+        self.class_type = class_type
         self.subject = subject
 
         self.date = start.split(' ')[0]
@@ -46,18 +61,18 @@ class Class:
 
 
 # Function to send the first GET request using the cookie provided.
-def getFirstRequest(jsessionid):
+def get_first_request(jsessionid):
     init = commence("Sending initial payload")
 
-    r = connect.firstRequest(jsessionid)
-    if r.status_code != 200: raise Exception("Unexpected response code")
+    r = connect.first_request(jsessionid)
+    if r.status_code != 200: raise ResponseError("Unexpected response code")
 
     finalize(init)
     return r.text
 
 
 # Function to extract the cookies necessary to make the POST request, from the server response of the first request.
-def extractCookies(response):
+def extract_cookies(response):
     init = commence("Extracting cookies")
 
     # Iterate the response lines to search the cookies, and save them in variables.
@@ -79,7 +94,7 @@ def extractCookies(response):
         if found_first and found_second and found_third: break
 
     if 'source' not in locals():  # If the variable 'source' is not defined, the cookie was probably not valid.
-        raise Exception("Invalid JSESSIONID")
+        raise BadCookieError("Invalid JSESSIONID")
 
     finalize(init)
     return [source, viewstate, submit]  # Return a list that contains the extracted parameters.
@@ -87,7 +102,7 @@ def extractCookies(response):
 
 # Function that sends the HTTP POST request to the server and retrieves the raw data of the calendar.
 # The raw text response is returned.
-def postCalendarRequest(jsessionid, cookies, options):
+def post_request(jsessionid, cookies, options):
     init = commence("Obtaining raw calendar data")
 
     if options["years"] == "auto":
@@ -98,65 +113,65 @@ def postCalendarRequest(jsessionid, cookies, options):
         start = int(datetime.timestamp(datetime(2000, 9, 1)) * 1000)
         end = int(datetime.timestamp(datetime(2100, 6, 1)) * 1000)
     else:
-        start = int(datetime.timestamp(int(f"20{options['years'].split('-')[0]}"), 9, 1) * 1000)
-        end = int(datetime.timestamp(int(f"20{options['years'].split('-')[1]}"), 6, 1) * 1000)
+        years = options["years"].split('-')
+        start = int(datetime.timestamp(int(f"20{years[0]}"), 9, 1) * 1000)
+        end = int(datetime.timestamp(int(f"20{years[1]}"), 6, 1) * 1000)
 
-    if options["terms"] != "all":
-        if options["terms"].lower() == "q1": end -= 13042800000
-        else: start += 10544400000
+    if options["terms"].lower() == "q1": end -= 13042800000
+    elif options["terms"].lower() == "q2": start += 10544400000
 
     source = cookies[0]
     view = cookies[1]
     submit = cookies[2]
 
     # Creating the body with the parameters extracted before, with the syntax required by the server.
-    calendarPayload = f"javax.faces.partial.ajax=true&javax.faces.source={source}&javax.faces.partial.execute={source}&javax.faces.partial.render={source}&{source}={source}&{source}_start={start}&{source}_end={end}&{submit}_SUBMIT=1&javax.faces.ViewState={view}"
+    payload = f"javax.faces.partial.ajax=true&javax.faces.source={source}&javax.faces.partial.execute={source}&javax.faces.partial.render={source}&{source}={source}&{source}_start={start}&{source}_end={end}&{submit}_SUBMIT=1&javax.faces.ViewState={view}"
 
     # Send the POST request.
-    result = connect.postRequest(calendarPayload, jsessionid).text
+    result = connect.post_request(payload, jsessionid).text
 
     # Basic response verification.
     if result.split('<')[-1] != "/partial-response>":
-        raise Exception("Invalid response")
+        raise ResponseError("Invalid response (no partial-response)")
 
     # extract a sample event id from the first event.
     # used to craft the payload for the second request.
     # if there are no ids, the calendar is empty.
-    try: sampleId = re.search(r'[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}', result).group(0)
+    try: sample_id = re.search(r'[a-z0-9]{8}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{12}', result).group(0)
     except AttributeError: raise AttributeError("Empty calendar")
 
     locations = {}
     if options["locationParsing"] or options["links"]:
         # obtain links for each event location.
         # links are used to obtain room codes, which include city, building and other important info.
-        locationPayload = f"javax.faces.partial.ajax=true&javax.faces.source={source}&javax.faces.partial.execute={source}&javax.faces.partial.render={source[:10:]}eventDetails+{source[:10:]}aulas_url&javax.faces.behaviour.event=eventSelect&javax.faces.partial.event=eventSelect&{source}_selectedEventId={sampleId}&{submit}_SUBMIT=1&javax.faces.ViewState={view}"
-        locationInfo = connect.postRequest(locationPayload, jsessionid).text
+        loc_payload = f"javax.faces.partial.ajax=true&javax.faces.source={source}&javax.faces.partial.execute={source}&javax.faces.partial.render={source[:10:]}eventDetails+{source[:10:]}aulas_url&javax.faces.behaviour.event=eventSelect&javax.faces.partial.event=eventSelect&{source}_selectedEventId={sample_id}&{submit}_SUBMIT=1&javax.faces.ViewState={view}"
+        loc_info = connect.post_request(loc_payload, jsessionid).text
 
         # process response and filter out html code and garbage.
-        removeCharacters = ['\t', '\n', 'class="enlaceUniovi"', '</li>', '</a>', '<a href=', 'target="_blank">', '"']
-        for char in removeCharacters:
-            locationInfo = locationInfo.replace(char, '')
+        chars_to_remove = ['\t', '\n', 'class="enlaceUniovi"', '</li>', '</a>', '<a href=', 'target="_blank">', '"']
+        for char in chars_to_remove:
+            loc_info = loc_info.replace(char, '')
 
-        locationInfo = locationInfo.split('<li>')[1:]
-        locationInfo[-1] = locationInfo[-1].split('</ul>')[0]
+        loc_info = loc_info.split('<li>')[1:]
+        loc_info[-1] = loc_info[-1].split('</ul>')[0]
 
         # save each link in a dictionary.
-        for location in locationInfo:
+        for location in loc_info:
             locations[location.split('  ')[1].lower()] = location.split('  ')[0]
 
     finalize(init)
     return result, locations
 
 
-def obtainEvents(rawResponse, locations, options):
+def obtain_events(raw_response, locations, options):
     init = commence("Parsing events")
 
     description = options['description']
     links = options['links']
-    classTypeParsing = options['classTypeParsing']
-    locationParsing = options['locationParsing']
+    type_parsing = options['classTypeParsing']
+    loc_parsing = options['locationParsing']
 
-    data = json.loads(rawResponse.split('[{"events" : ')[1].split('}]]')[0])
+    data = json.loads(raw_response.split('[{"events" : ')[1].split('}]]')[0])
     classes = []
 
     for event in data:
@@ -164,37 +179,37 @@ def obtainEvents(rawResponse, locations, options):
         end = event['end'].replace('T', ' ').split('+')[0]
         desc = event['description'].replace('\n', '')
 
-        titleSplit = event['title'].split(" - ")
-        subject = titleSplit[0]
-        classType = parse.parseClassType(titleSplit[1]) if classTypeParsing else titleSplit[1]
-        title = f"{subject} ({classType})"
+        title_split = event['title'].split(" - ")
+        subject = title_split[0]
+        class_type = parse.parse_class_type(title_split[1]) if type_parsing else title_split[1]
+        title = f"{subject} ({class_type})"
 
         loc = desc.split(" - ")[1]
-        code = locations[loc.lower()].split('?codEspacio=')[1] if links or locationParsing else {}
-        location = parse.parseLocation(loc, code) if locationParsing else loc
+        code = locations[loc.lower()].split('?codEspacio=')[1] if links or loc_parsing else {}
+        location = parse.parse_location(loc, code) if loc_parsing else loc
         if links: desc += f" ({locations[loc.lower()]})"
 
-        classes.append(Class(event['id'], title, start, end, location, desc if description else "", classType, subject))
+        classes.append(Class(event['id'], title, start, end, location, desc if description else "", class_type, subject))
 
     finalize(init)
     return classes
 
 
-def generateOutput(classes, filename, format):
+def generate_output(classes, filename, format):
     name = f"{filename}.{format}"
     init = commence(f"Generating output ({name})")
 
-    icsMode = format == "ics"
+    ics = format == "ics"
 
     # Generate the output file.
-    if icsMode: c = Calendar()
+    if ics: c = Calendar()
     else:
         g = open(name, "w")
         g.write("Subject,Start Date,Start Time,End Date,End Time,Location,Description\n")
 
     # Write each event to the file.
     for event in classes:
-        if icsMode:
+        if ics:
             c.events.add(Event(name=event.title, begin=event.start_raw, end=event.end_raw,
                                description=event.description, location=event.location, uid=event.uid))
         else:
@@ -202,7 +217,7 @@ def generateOutput(classes, filename, format):
                       {event.location},{event.description}\n")
 
     # Write the file to disk.
-    if icsMode:
+    if ics:
         with open(name, "w") as f:
             for i in c.serialize_iter():
                 if bool(re.search(r'DT((START)|(END)):', i.strip())): f.write(i.replace('Z', ''))
@@ -212,7 +227,7 @@ def generateOutput(classes, filename, format):
     finalize(init)
 
 
-def printStats(classes):
+def print_stats(classes):
     stats = {
         "hours": 0,
         "days": {},
@@ -227,7 +242,7 @@ def printStats(classes):
     for event in classes:
         date = event.date
         location = event.location
-        classType = event.classType
+        class_type = event.class_type
         subject = event.subject
 
         hours = int(event.end.split(':')[0]) - int(event.start.split(':')[0])
@@ -235,7 +250,7 @@ def printStats(classes):
         hours = hours + minutes / 60
         stats["hours"] += hours
 
-        for key, value in [("classTypes", classType), ("locations", location), ("subjects", subject)]:
+        for key, value in [("classTypes", class_type), ("locations", location), ("subjects", subject)]:
             if value not in stats[key]: stats[key][value] = [0, 0]
             stats[key][value][0] += 1
             stats[key][value][1] += hours
@@ -276,8 +291,8 @@ def printStats(classes):
     print(f"\tSecond quarter: {stats['Q2'][0]} classes, {stats['Q2'][1]}h")
 
     print("\n\tClass types:")
-    for classType in stats["classTypes"]:
-        print(f"\t\t{classType[0]}: {classType[1][0]} ({classType[1][1]}h)")
+    for class_type in stats["classTypes"]:
+        print(f"\t\t{class_type[0]}: {class_type[1][0]} ({class_type[1][1]}h)")
 
     print("\n\tLocations:")
     for location in stats["locations"]:
@@ -307,11 +322,11 @@ def main(argv) -> int:
     args = parser.parse_args(argv)
 
     location = args.location == "on"
-    classType = args.class_type == "on"
+    class_type = args.class_type == "on"
     links = args.links == "on"
     stats = args.statistics
-    format = args.format
-    dryRun = args.dry_run
+    file_format = args.format
+    dry_run = args.dry_run
     filename = args.output_file
     session = args.session
     separate = args.separate_by
@@ -321,7 +336,7 @@ def main(argv) -> int:
 
     options = {
         "locationParsing": location,
-        "classTypeParsing": classType,
+        "classTypeParsing": class_type,
         "links": links,
         "description": description,
         "years": years,
@@ -329,26 +344,26 @@ def main(argv) -> int:
     }
 
     # If the JSESSIONID is not valid, exit.
-    if not cookie.verifyStructure(session):
+    if not cookie.verify_structure(session):
         print("Invalid JSESSIONID.")
         return 1
 
     try:
-        cookies = extractCookies(getFirstRequest(session))
-        rawResponse, locations = postCalendarRequest(session, cookies, options)
-        classes = obtainEvents(rawResponse, locations, options)
-        if not dryRun:
+        cookies = extract_cookies(get_first_request(session))
+        raw_response, locations = post_request(session, cookies, options)
+        classes = obtain_events(raw_response, locations, options)
+        if not dry_run:
             if separate is not None:
                 for element in list(set([getattr(c, separate) for c in classes])):
-                    generateOutput([c for c in classes if getattr(c, separate) == element], f"{filename}_{element.replace(' ', '')}", format)
-            else: generateOutput(classes, filename, format)
+                    generate_output([c for c in classes if getattr(c, separate) == element], f"{filename}_{element.replace(' ', '')}", file_format)
+            else: generate_output(classes, filename, file_format)
     except Exception as e:
         print(f"{status} [×] ({e})")
         return 2 if e.__class__ == AttributeError else 1
 
     print("\nScript finished, %d events parsed." % len(classes))
 
-    if stats: printStats(classes)
+    if stats: print_stats(classes)
     return 0
 
 
