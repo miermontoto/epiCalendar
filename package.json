@@ -1,6 +1,6 @@
 {
   "name": "epicalendar",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@reach/combobox": "^0.17.0",
@@ -27,7 +27,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "start-api": "cd .. && env/bin/flask run"
+    "start-api": "flask run"
   },
   "eslintConfig": {
     "extends": [

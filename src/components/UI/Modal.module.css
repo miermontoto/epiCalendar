@@ -12,7 +12,8 @@
   position: relative;
   top: 7.5rem;
   width: min(85%, 40rem);
-  background-color: #0e1723;
+  background-color: rgba(0, 0, 0, 0.95);
+  color: white;
   margin: auto;
   padding: 1rem;
   border-radius: 14px;

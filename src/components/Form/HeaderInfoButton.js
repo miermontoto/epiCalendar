@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
-import classes from "./HeaderSettingsButton.module.css";
+import classes from "./HeaderInfoButton.module.css";
 
-const HeaderSettingsButton = (props) => {
+const HeaderInfoButton = (props) => {
   const [btnIsHighlighted] = useState(false);
 
   const btnClasses = `${classes.button} ${
@@ -15,9 +15,9 @@ const HeaderSettingsButton = (props) => {
       <span></span>
       <span></span>
       <span></span>
-      ⚙
+      ⓘ
     </button>
   );
 };
 
-export default HeaderSettingsButton;
+export default HeaderInfoButton;

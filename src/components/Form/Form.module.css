@@ -2,11 +2,16 @@ html {
   height: 100%;
 }
 
-body {
-  margin: 0;
-  padding: 0;
-  font-family: sans-serif;
-  background: linear-gradient(#141e30, #243b55);
+:root {
+  --button-color: white;
+  --button-text: white;
+  --button-color-hover: lightgray;
+  --button-text-hover: black;
+  --button-disabled: red;
+  --button-disabled-hover: #740808;
+  --button-valid: #32cd32;
+  --button-valid-hover: #228b22;
+  --button-text-light: white;
 }
 
 .form {
@@ -73,7 +78,6 @@ form legend {
   border-radius: 4px;
   border: 1px solid #ccc;
   width: min(25rem, 95%);
-  margin-bottom: 1rem;
   color: #141e30;
   margin: auto;
 }
@@ -88,7 +92,7 @@ button {
   position: relative;
   display: inline-block;
   padding: 10px 20px;
-  color: #03e9f4;
+  color: var(--button-color);
   font-size: 16px;
   text-decoration: none;
   text-transform: uppercase;
@@ -101,22 +105,33 @@ button {
 }
 
 button:hover {
-  background: #03e9f4;
-  color: #fff;
-  box-shadow: 0 0 5px #03e9f4, 0 0 25px #03e9f4, 0 0 50px #03e9f4,
-    0 0 100px #03e9f4;
+  background: var(--button-color-hover);
+  color: var(--button-text-hover);
+  box-shadow: 0 0 5px var(--button-color), 0 0 25px var(--button-color), 0 0 50px var(--button-color),
+    0 0 100px var(--button-color);
   cursor: pointer;
 }
 
 button:disabled {
   cursor: not-allowed;
-  color: red;
+  color: var(--button-disabled);
 }
 
 button:disabled:hover {
-  background: #740808;
-  box-shadow: 0 0 5px #740808, 0 0 25px #740808, 0 0 50px #740808,
-    0 0 100px #740808;
+  background: var(--button-disabled-hover);
+  box-shadow: 0 0 5px var(--button-disabled-hover), 0 0 25px var(--button-disabled-hover), 0 0 50px var(--button-disabled-hover),
+    0 0 100px var(--button-disabled-hover);
+}
+
+.mainButton {
+  color: var(--button-valid);
+}
+
+.mainButton:hover {
+  background: var(--button-valid-hover);
+  box-shadow: 0 0 5px var(--button-valid-hover), 0 0 25px var(--button-valid-hover), 0 0 50px var(--button-valid-hover),
+    0 0 100px var(--button-valid-hover);
+  color: var(--button-text-light);
 }
 
 button span:nth-child(1) {
@@ -124,7 +139,7 @@ button span:nth-child(1) {
   left: -100%;
   width: 100%;
   height: 2px;
-  background: linear-gradient(90deg, transparent, #03e9f4);
+  background: linear-gradient(90deg, transparent, var(--button-color));
   animation: btn-anim1 1s linear infinite;
 }
 
@@ -143,7 +158,7 @@ button span:nth-child(2) {
   right: 0;
   width: 2px;
   height: 100%;
-  background: linear-gradient(180deg, transparent, #03e9f4);
+  background: linear-gradient(180deg, transparent, var(--button-color));
   animation: btn-anim2 1s linear infinite;
   animation-delay: 0.3s;
 }
@@ -163,7 +178,7 @@ button span:nth-child(3) {
   right: -100%;
   width: 100%;
   height: 2px;
-  background: linear-gradient(270deg, transparent, #03e9f4);
+  background: linear-gradient(270deg, transparent, var(--button-color));
   animation: btn-anim3 1s linear infinite;
   animation-delay: 0.55s;
 }
@@ -188,7 +203,7 @@ button span:nth-child(4) {
   left: 0;
   width: 2px;
   height: 100%;
-  background: linear-gradient(0deg, transparent, #03e9f4);
+  background: linear-gradient(0deg, transparent, var(--button-color));
   animation: btn-anim4 1s linear infinite;
   animation-delay: 0.8s;
 }
@@ -219,6 +234,22 @@ button:disabled span:nth-child(4) {
   background: linear-gradient(0deg, transparent, red);
 }
 
+.mainButton span:nth-child(1) {
+  background: linear-gradient(90deg, transparent, var(--button-valid));
+}
+
+.mainButton span:nth-child(2) {
+  background: linear-gradient(180deg, transparent, var(--button-valid));
+}
+
+.mainButton span:nth-child(3) {
+  background: linear-gradient(270deg, transparent, var(--button-valid));
+}
+
+.mainButton span:nth-child(4) {
+  background: linear-gradient(0deg, transparent, var(--button-valid));
+}
+
 .actions {
   display: flex;
   flex-direction: row;
@@ -237,7 +268,7 @@ button:disabled span:nth-child(4) {
 
 .invalid input:focus {
   border-color: inherit;
-  background-color: white;
+  background-color: var(--button-color);
 }
 
 .error {

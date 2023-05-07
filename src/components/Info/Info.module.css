@@ -15,18 +15,7 @@
 
 .overall {
   overflow: auto;
-}
-
-.checkboxes {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-.checkboxes label {
-  font-weight: bold;
-  margin-bottom: 0.25rem;
-  display: block;
+  text-align: center;
 }
 
 .buttons {
@@ -36,6 +25,21 @@
 
 .buttons button:hover {
   box-shadow: none;
+  margin-left: 0.5rem;
+  color: black;
+}
+
+.links {
+  margin-top: 3rem;
+}
+
+.links li {
+  filter: invert(100%);
+  margin: 0.5rem;
+  display: inline;
+}
+
+.links li > a {
   margin-left: 0.5rem;
   color: black;
 }

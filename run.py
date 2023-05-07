@@ -51,7 +51,7 @@ def form_post():
     exit_code = epiCalendar.main(argv)
     if os.path.exists(backend_filename) and exit_code == 0:
         if debug: print(f"[DEBUG] Attempting to serve {backend_filename} as {download_filename}.")
-        target = send_file(backend_filename, as_attachment=True, attachment_filename=download_filename)
+        target = send_file(backend_filename, as_attachment=True, download_name=download_filename)
         if os.path.exists(backend_filename): os.remove(backend_filename)
         if debug: print("[DEBUG] File served.")
         return target

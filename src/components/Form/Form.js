@@ -1,15 +1,13 @@
 import useInput from "../../hooks/use-input";
 import HeaderSettingsButton from "./HeaderSettingsButton";
+import HeaderInfoButton from "./HeaderInfoButton";
 import React from "react";
 
 import SettingsContext from "../../store/settings-context";
 import classes from "./Form.module.css";
 
 // Import the default state
-import {
-  DEFAULT_FILENAME,
-  // DEFAULT_UNIVERSITY,
-} from "../../store/settings-context";
+import { DEFAULT_FILENAME } from "../../store/settings-context";
 
 // Component that represents the form
 const Form = (props) => {
@@ -46,7 +44,6 @@ const Form = (props) => {
 
     document.getElementById("form").submit();
     ctx.saveNameHandler(DEFAULT_FILENAME);
-    // ctx.check(DEFAULT_UNIVERSITY);
     codeReset();
   };
 
@@ -61,7 +58,8 @@ const Form = (props) => {
         <legend>epiCalendar</legend>
         <div className={classes.control}>
           <div className={codeInputClasses}>
-            <label htmlFor="codigo">JSESSIONID</label>
+          <a href="https://mier.info/epiCalendar" target="_blank" rel="noreferrer" id="tutorial"
+            title="Enlace de ayuda para obtener JSESSIONID">JSESSIONID</a>
             <input
               type="text"
               id="codigo"
@@ -105,9 +103,9 @@ const Form = (props) => {
       </form>
 
       <div className={classes.actions}>
-        <HeaderSettingsButton onClick={props.onShowSettings} />
+        <HeaderInfoButton onClick={props.onShowInfo} className={classes.infoButton}/>
         <button
-          className="button"
+          className={classes.mainButton}
           disabled={!formIsValid}
           onClick={formSubmissionHandler}
         >
@@ -117,6 +115,7 @@ const Form = (props) => {
           <span></span>
           Generar
         </button>
+        <HeaderSettingsButton onClick={props.onShowSettings} />
       </div>
     </React.Fragment>
   );
