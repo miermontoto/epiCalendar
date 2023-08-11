@@ -4,7 +4,7 @@ Fork de [un script de Python](https://github.com/Bimo99B9/autoUniCalendar) que c
 
 ## Uso
 
-Para utilizar el script, se puede utilizar tanto [la versión web](https://epicalendar.herokuapp.com) como el script en local.
+Para utilizar el script, se puede utilizar tanto [la versión web](https://epicalendar.mier.info) como el script en local.
 
 ### Página web (recomendado)
 
