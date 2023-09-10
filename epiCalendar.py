@@ -184,7 +184,11 @@ def obtain_events(raw_response, locations, options):
         class_type = parse.parse_class_type(title_split[1]) if type_parsing else title_split[1]
         title = f"{subject} ({class_type})"
 
-        loc = desc.split(" - ")[1]
+        # allow for multiple ' - ' in the description
+        temp = desc.split(" - ")
+        temp.pop(0)
+        loc = " - ".join(temp)
+
         code = locations[loc.lower()].split('?codEspacio=')[1] if links or loc_parsing else {}
         location = parse.parse_location(loc, code) if loc_parsing else loc
         if links: desc += f" ({locations[loc.lower()]})"
