@@ -184,11 +184,7 @@ def obtain_events(raw_response, locations, options):
         class_type = parse.parse_class_type(title_split[1]) if type_parsing else title_split[1]
         title = f"{subject} ({class_type})"
 
-        # allow for multiple ' - ' in the description
-        temp = desc.split(" - ")
-        temp.pop(0)
-        loc = " - ".join(temp)
-
+        loc = " - ".join(desc.split(" - ")[1:])  # allow for multiple ' - ' in the description
         code = locations[loc.lower()].split('?codEspacio=')[1] if links or loc_parsing else {}
         location = parse.parse_location(loc, code) if loc_parsing else loc
         if links: desc += f" ({locations[loc.lower()]})"
@@ -224,7 +220,7 @@ def generate_output(classes, filename, format):
     if ics:
         with open(name, "w") as f:
             for i in c.serialize_iter():
-                if bool(re.search(r'DT((START)|(END)):', i.strip())): f.write(i.replace('Z', ''))
+                if bool(re.search(r'DT((START)|(END)):', i.strip())): f.write(i.replace('Z', ''))  # remove Z from timestamps
                 else: f.write(i)
     else: g.close()
 
