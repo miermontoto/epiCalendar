@@ -15,7 +15,7 @@ import connect
 import cookie
 import parse
 
-__version__ = "236"
+__version__ = "248"
 
 
 class ApplicationError(Exception):
@@ -213,8 +213,7 @@ def generate_output(classes, filename, format):
             c.events.add(Event(name=event.title, begin=event.start_raw, end=event.end_raw,
                                description=event.description, location=event.location, uid=event.uid))
         else:
-            g.write(f"{event.title},{event.date},{event.start},{event.date},{event.end},\
-                      {event.location},{event.description}\n")
+            g.write(f"{event.title},{event.date},{event.start},{event.date},{event.end},{event.location},{event.description}\n")
 
     # Write the file to disk.
     if ics:
