@@ -15,7 +15,7 @@ import connect
 import cookie
 import parse
 
-__version__ = "248"
+__version__ = "249"
 
 
 class ApplicationError(Exception):
@@ -144,7 +144,7 @@ def post_request(jsessionid, cookies, options):
     if options["locationParsing"] or options["links"]:
         # obtain links for each event location.
         # links are used to obtain room codes, which include city, building and other important info.
-        loc_payload = f"javax.faces.partial.ajax=true&javax.faces.source={source}&javax.faces.partial.execute={source}&javax.faces.partial.render={source[:10:]}eventDetails+{source[:10:]}aulas_url&javax.faces.behaviour.event=eventSelect&javax.faces.partial.event=eventSelect&{source}_selectedEventId={sample_id}&{submit}_SUBMIT=1&javax.faces.ViewState={view}"
+        loc_payload classType= f"javax.faces.partial.ajax=true&javax.faces.source={source}&javax.faces.partial.execute={source}&javax.faces.partial.render={source[:10:]}eventDetails+{source[:10:]}aulas_url&javax.faces.behaviour.event=eventSelect&javax.faces.partial.event=eventSelect&{source}_selectedEventId={sample_id}&{submit}_SUBMIT=1&javax.faces.ViewState={view}"
         loc_info = connect.post_request(loc_payload, jsessionid).text
 
         # process response and filter out html code and garbage.
@@ -312,7 +312,7 @@ def main(argv) -> int:
     parser.add_argument("--format", choices=["csv", "ics"], default="ics", help="sets the output file format (default: 'ics')")
     parser.add_argument("--dry-run", action='store_true', help="disables the generation of files (default: 'off')")
     parser.add_argument("--output-file", "-o", "--filename", "-f", default="Calendario", help="sets the name of the output file (default: 'Calendario')")
-    parser.add_argument("--separate-by", choices=["subject", "classType"], help="creates separate files depending on the option selected (default: 'off')")
+    parser.add_argument("--separate-by", choices=["subject", "class_typeclassType"], help="creates separate files depending on the option selected (default: 'off')")
     parser.add_argument("--description", choices=["on", "off"], default="on", help="enables or disables the description of the events (default: 'on')")
     parser.add_argument("-v", "--version", action="version", version=f"epiCalendar c{__version__} by Juan Mier (mier@mier.info)")
     parser.add_argument("--years", "-y", default="auto", help="sets the range of years to be parsed. format: yy-yy (default: auto, eg: 20-21)")
@@ -347,15 +347,16 @@ def main(argv) -> int:
         print("Invalid JSESSIONID.")
         return 1
 
+    cookies = extract_cookies(get_first_request(session))
+    raw_response, locations = post_request(session, cookies, options)
+    classes = obtain_events(raw_response, locations, options)
+    if not dry_run:
+        if separate is not None:
+            for element in list(set([getattr(c, separate) for c in classes])):
+                generate_output([c for c in classes if getattr(c, separate) == element], f"{filename}_{element.replace(' ', '')}", file_format)
+        else: generate_output(classes, filename, file_format)
     try:
-        cookies = extract_cookies(get_first_request(session))
-        raw_response, locations = post_request(session, cookies, options)
-        classes = obtain_events(raw_response, locations, options)
-        if not dry_run:
-            if separate is not None:
-                for element in list(set([getattr(c, separate) for c in classes])):
-                    generate_output([c for c in classes if getattr(c, separate) == element], f"{filename}_{element.replace(' ', '')}", file_format)
-            else: generate_output(classes, filename, file_format)
+        pass
     except Exception as e:
         print(f"{status} [×] ({e})")
         return 2 if e.__class__ == AttributeError else 1
