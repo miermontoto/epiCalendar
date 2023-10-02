@@ -19,17 +19,17 @@ __version__ = "250"
 
 
 class ApplicationError(Exception):
-    # Base class for exceptions in this module.
+    """Base class for exceptions in this module."""
     pass
 
 
 class ResponseError(ApplicationError):
-    # Invalid response from the server.
+    """Invalid response from the server."""
     pass
 
 
 class BadCookieError(ApplicationError):
-    # Invalid cookie introduced by the user.
+    """Invalid cookie introduced by the user."""
     pass
 
 
@@ -45,7 +45,7 @@ def finalize(init):
 
 
 class Class:
-    def __init__(self, uid, title, start, end, location, description, class_type, subject):
+    def __init__(self, uid, title, start, end, location, description, class_type, class_group, subject):
         self.uid = uid
         self.title = title
         self.start_raw = start
@@ -53,6 +53,7 @@ class Class:
         self.location = location
         self.description = description
         self.class_type = class_type
+        self.class_group = class_group
         self.subject = subject
 
         self.date = start.split(' ')[0]
@@ -181,15 +182,19 @@ def obtain_events(raw_response, locations, options):
 
         title_split = event['title'].split(" - ")
         subject = title_split[0]
-        class_type = parse.parse_class_type(title_split[1]) if type_parsing else title_split[1]
-        title = f"{subject} ({class_type})"
+        if type_parsing:
+            class_type, class_group = parse.parse_class_type(title_split[1])
+        else:
+            class_type = title_split[1]
+            class_group = ''
+        title = f"{subject} ({class_type}{class_group})"
 
         loc = " - ".join(desc.split(" - ")[1:])  # allow for multiple ' - ' in the description
         code = locations[loc.lower()].split('?codEspacio=')[1] if links or loc_parsing else {}
         location = parse.parse_location(loc, code) if loc_parsing else loc
         if links: desc += f" ({locations[loc.lower()]})"
 
-        classes.append(Class(event['id'], title, start, end, location, desc if description else "", class_type, subject))
+        classes.append(Class(event['id'], title, start, end, location, desc if description else "", class_type, class_group, subject))
 
     finalize(init)
     return classes

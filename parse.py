@@ -1,6 +1,6 @@
 import re
 
-__version__ = "2.1"
+__version__ = "2.2"
 
 buildingCodes = {  # building codes for 'Milla del Conocimiento' (Gijón 02.01) sourced from gis.uniovi.es
     '01': 'AN',
@@ -12,14 +12,14 @@ buildingCodes = {  # building codes for 'Milla del Conocimiento' (Gijón 02.01) 
 
 
 # Parse the correct class name for each entry.
-def parse_location(loc, cod_espacio):
+def parse_location(loc, cod_espacio) -> str:
     try: building_code = cod_espacio.split('.')[2]  # current building code
     except IndexError:  # should never happen, but this way it's more robust.
         return loc
 
     # if location isn't in "Milla del Conocimiento Gijón" or building is outside of EPI Gijón, return location as is.
     floor = cod_espacio.split('.')[4]
-    if cod_espacio[:5] != "02.01" or building_code not in buildingCodes: return loc
+    if not cod_espacio.startswith('02.01') or building_code not in buildingCodes: return loc
 
     # Aula AS-1 through Aula AS-11
     result = re.search(r'02.01.02.00.P1.00.(0[1-9]|1[0-1])', cod_espacio)
@@ -47,7 +47,7 @@ def parse_location(loc, cod_espacio):
     result = re.search(r'^AULA DO ?-1?\d[A-B]?$', loc.upper())
     if bool(result):
         do_final = result.group(0).replace('AULA ', '').replace(' ', '')
-        if do_final[-2:] == "10":  # DO-10 can be DO-10A or DO-10B.
+        if do_final.endswith('10'):  # DO-10 can be DO-10A or DO-10B.
             return f"{do_final}{loc[-1]}"
         return do_final
 
@@ -68,7 +68,7 @@ def parse_location(loc, cod_espacio):
 # Parse the correct "class type" for each entry.
 # Also parses the group for each entry except for "Clase Expositiva".
 # AFAIK there are only "Teoría (CEX)", "Prácticas de Aula (PAx)", "Prácticas de Laboratorio (PLx)" and "Teorías Grupales (TGx)".
-def parse_class_type(type):
+def parse_class_type(type) -> [str]:
     type_lower = type.lower().replace('.', '')  # lowercase and remove dots so it's easier to parse.
     class_group = type.replace('-', ' ').rsplit()[-1].strip('0').upper()
 
@@ -78,9 +78,9 @@ def parse_class_type(type):
 
     # parse class type. it has to be as generic as possible because different subjects use different
     # abbreviations or styles for the same thing.
-    if "teo" in type_lower or type_lower == "te" or "expositiv" in type_lower: return f"CEX{lang}"
-    if "tut" in type_lower or "grupal" in type_lower or type_lower == "tg": return f"TG{class_group}"
-    if "lab" in type_lower or type_lower == "pl": return f"PL{class_group}"
-    if "aula" in type_lower or type_lower == "pa": return f"PA{class_group}"
+    if "teo" in type_lower or type_lower == "te" or "expositiv" in type_lower: return ['CEX', lang]
+    if "tut" in type_lower or "grupal" in type_lower or type_lower == "tg": return ['TG', class_group]
+    if "lab" in type_lower or type_lower == "pl": return ['PL', class_group]
+    if "aula" in type_lower or type_lower == "pa": return ['PA', class_group]
 
-    return type  # If the class type is not recognized, return the original string.
+    return [type, '']  # If the class type is not recognized, return the original string.
