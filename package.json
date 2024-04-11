@@ -11,7 +11,7 @@
     "i18next": "^21.8.14",
     "i18next-browser-languagedetector": "^6.1.4",
     "nodejs": "^0.0.0",
-    "npm": "^8.15.0",
+    "npm": "^10.5.2",
     "nth-check": "^2.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
