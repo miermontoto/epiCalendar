@@ -15,7 +15,7 @@ import connect
 import cookie
 import parse
 
-__version__ = "250"
+__version__ = "272"
 
 
 class ApplicationError(Exception):
@@ -322,6 +322,7 @@ def main(argv) -> int:
     parser.add_argument("-v", "--version", action="version", version=f"epiCalendar c{__version__} by Juan Mier (mier@mier.info)")
     parser.add_argument("--years", "-y", default="auto", help="sets the range of years to be parsed. format: yy-yy (default: auto, eg: 20-21)")
     parser.add_argument("--term", "-t", default="all", help="sets the terms to be parsed.", choices=["q1", "q2", "all"])
+    parser.add_argument("--debug", "-d", action="store_true", help="enables debug mode (default: 'off')")
 
     args = parser.parse_args(argv)
 
@@ -337,6 +338,7 @@ def main(argv) -> int:
     description = args.description == "on"
     years = args.years
     terms = args.term
+    debug = args.debug
 
     options = {
         "locationParsing": location,
@@ -363,6 +365,7 @@ def main(argv) -> int:
             else: generate_output(classes, filename, file_format)
     except Exception as e:
         print(f"{status} [×] ({e})")
+        if debug: raise e
         return 2 if e.__class__ == AttributeError else 1
 
     print("\nScript finished, %d events parsed." % len(classes))

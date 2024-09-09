@@ -18,6 +18,7 @@ def parse_location(loc, cod_espacio) -> str:
         return loc
 
     # if location isn't in "Milla del Conocimiento Gijón" or building is outside of EPI Gijón, return location as is.
+    if len(cod_espacio.split('.')) < 5: return loc
     floor = cod_espacio.split('.')[4]
     if not cod_espacio.startswith('02.01') or building_code not in buildingCodes: return loc
 
