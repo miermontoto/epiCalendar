@@ -18,11 +18,16 @@ debug = os.environ.get('FLASK_ENV') == 'development'
 def form_post():
     if debug: print(f"[DEBUG] POST data received from React: {request.form}")
 
-    jsessionid = request.form['jsessionid']
-    filename = request.form['filename']
-    location = request.form['location'] == "true"
-    class_type = request.form['class-type'] == "true"
-    extension = request.form['extension']
+    # validar que todos los campos requeridos estén presentes
+    jsessionid = request.form.get('jsessionid')
+    filename = request.form.get('filename')
+    extension = request.form.get('extension')
+
+    if not all([jsessionid, filename, extension]):
+        return jsonify({"error": "Faltan campos requeridos"}), 400
+
+    location = request.form.get('location') == "true"
+    class_type = request.form.get('class-type') == "true"
 
     if debug:
         print(f"[DEBUG] Calendar info: {jsessionid} → {filename}{extension}")
