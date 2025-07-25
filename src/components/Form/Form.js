@@ -1,7 +1,7 @@
+import React, { useState } from "react";
 import useInput from "../../hooks/use-input";
-import HeaderSettingsButton from "./HeaderSettingsButton";
 import HeaderInfoButton from "./HeaderInfoButton";
-import React from "react";
+import HeaderSettingsButton from "./HeaderSettingsButton";
 
 import SettingsContext from "../../store/settings-context";
 import classes from "./Form.module.css";
@@ -13,6 +13,10 @@ import { DEFAULT_FILENAME } from "../../store/settings-context";
 const Form = (props) => {
   // Access the settings context
   const ctx = React.useContext(SettingsContext);
+
+  // estados para manejar errores y loading
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     value: enteredCode,
@@ -35,16 +39,54 @@ const Form = (props) => {
   // Variable for the validity of the form
   let formIsValid = codeIsValid;
 
-  const formSubmissionHandler = (event) => {
+  const formSubmissionHandler = async (event) => {
     event.preventDefault();
     if (!codeIsValid) {
       console.log("Code is not valid");
       return;
     }
 
-    document.getElementById("form").submit();
-    ctx.saveNameHandler(DEFAULT_FILENAME);
-    codeReset();
+    setError("");
+    setIsLoading(true);
+
+    try {
+      // preparar datos del formulario
+      const formData = new FormData();
+      formData.append("jsessionid", enteredCode);
+      formData.append("filename", ctx.saveas);
+      formData.append("location", ctx.parse);
+      formData.append("class-type", ctx.classParsing);
+      formData.append("extension", ctx.extension);
+
+      const apiUrl = process.env.REACT_APP_API_URL || "";
+      const response = await fetch(`${apiUrl}/api/generate`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al generar el calendario");
+      }
+
+      // descargar el archivo
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = ctx.saveas + ctx.extension;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      ctx.saveNameHandler(DEFAULT_FILENAME);
+      codeReset();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Styling for the form (error message)
@@ -72,6 +114,11 @@ const Form = (props) => {
             {codeHasError && (
               <React.Fragment>
                 <p className={classes.error}>El código no es válido.</p>
+              </React.Fragment>
+            )}
+            {error && (
+              <React.Fragment>
+                <p className={classes.error}>{error}</p>
               </React.Fragment>
             )}
           </div>
@@ -106,14 +153,14 @@ const Form = (props) => {
         <HeaderInfoButton onClick={props.onShowInfo} className={classes.infoButton}/>
         <button
           className={classes.mainButton}
-          disabled={!formIsValid}
+          disabled={!formIsValid || isLoading}
           onClick={formSubmissionHandler}
         >
           <span></span>
           <span></span>
           <span></span>
           <span></span>
-          Generar
+          {isLoading ? "Generando..." : "Generar"}
         </button>
         <HeaderSettingsButton onClick={props.onShowSettings} />
       </div>

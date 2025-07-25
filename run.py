@@ -1,24 +1,20 @@
 import os
 import uuid
 
-from flask import Flask, render_template, request, send_file
+from flask import Flask, request, send_file, jsonify
 from flask_talisman import Talisman
+from flask_cors import CORS
 
 import epiCalendar
 import cookie
 
-app = Flask(__name__, static_folder='./build', static_url_path='/', template_folder='./build')
+app = Flask(__name__)
+CORS(app)  # permitir todos los orígenes en desarrollo
 Talisman(app, content_security_policy=None)
-
 debug = os.environ.get('FLASK_ENV') == 'development'
 
 
-@app.route('/', methods=['GET'])
-def index():
-    return serve()
-
-
-@app.route('/', methods=['POST'])
+@app.route('/api/generate', methods=['POST'])
 def form_post():
     if debug: print(f"[DEBUG] POST data received from React: {request.form}")
 
@@ -36,7 +32,7 @@ def form_post():
 
     if not cookie.verify_expiration(jsessionid):
         print("[DEBUG] [ERROR] Expired cookie submited.")
-        return serve(slug="ERROR: cookie inválida.")
+        return jsonify({"error": "Cookie inválida"}), 400
 
     uuid_string = str(uuid.uuid4())
     argv = [jsessionid, '--location', 'on' if location else 'off', '--class-type', 'on' if class_type else 'off', '-o', uuid_string, '--format', extension[1:]]
@@ -57,12 +53,12 @@ def form_post():
         return target
     elif exit_code == 2:
         if debug: print("[DEBUG] [ERROR] ¿No calendar events?")
-        return serve(slug="ERROR: No hay eventos en el calendario.")
+        return jsonify({"error": "No hay eventos en el calendario"}), 400
 
     if debug: print("[DEBUG] [ERROR] Script failed to generate file.")
-    return serve(slug="ERROR: No se pudo generar el calendario.")
+    return jsonify({"error": "No se pudo generar el calendario"}), 500
 
 
-@app.errorhandler(404)
-def serve(slug=""):
-    return render_template('index.html', slug=slug)
+@app.route('/api/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok"})
