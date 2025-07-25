@@ -24,9 +24,9 @@ if __name__ == "__main__":
             exit(1)
         if not verify_expiration(sys.argv[1]):
             print("Expired cookie.")
-            exit(1)
+            exit(3)
         print("Valid cookie.")
         exit(0)
     except Exception:
-        print("Usage: python3 utils.py <cookie>")
+        print("Usage: python3 cookie.py <cookie>")
         exit(2)
