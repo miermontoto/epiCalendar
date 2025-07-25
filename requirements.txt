@@ -1,5 +1,6 @@
 Flask==2.3.2
 flask_talisman==1.0.0
+flask-cors==4.0.0
 ics==0.7.2
 requests==2.32.2
 gunicorn==22.0.0
