@@ -72,7 +72,8 @@ def get_first_request(jsessionid):
     return r.text
 
 
-# Function to extract the cookies necessary to make the POST request, from the server response of the first request.
+# Function to extract the cookies necessary to make the POST request, from the
+# server response of the first request.
 def extract_cookies(response):
     init = commence("Extracting cookies")
 
@@ -101,8 +102,8 @@ def extract_cookies(response):
     return [source, viewstate, submit]  # Return a list that contains the extracted parameters.
 
 
-# Function that sends the HTTP POST request to the server and retrieves the raw data of the calendar.
-# The raw text response is returned.
+# Function that sends the HTTP POST request to the server and retrieves the raw
+# data of the calendar. The raw text response is returned.
 def post_request(jsessionid, cookies, options):
     init = commence("Obtaining raw calendar data")
 
@@ -115,8 +116,8 @@ def post_request(jsessionid, cookies, options):
         end = int(datetime.timestamp(datetime(2100, 6, 1)) * 1000)
     else:
         years = options["years"].split('-')
-        start = int(datetime.timestamp(int(f"20{years[0]}"), 9, 1) * 1000)
-        end = int(datetime.timestamp(int(f"20{years[1]}"), 6, 1) * 1000)
+        start = int(datetime.timestamp(datetime(int(f"20{years[0]}"), 9, 1)) * 1000)
+        end = int(datetime.timestamp(datetime(int(f"20{years[1]}"), 6, 1)) * 1000)
 
     if options["terms"].lower() == "q1": end -= 13042800000
     elif options["terms"].lower() == "q2": start += 10544400000
@@ -153,6 +154,7 @@ def post_request(jsessionid, cookies, options):
         for char in chars_to_remove:
             loc_info = loc_info.replace(char, '')
 
+        print(loc_info)
         loc_info = loc_info.split('<li>')[1:]
         loc_info[-1] = loc_info[-1].split('</ul>')[0]
 

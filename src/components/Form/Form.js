@@ -58,7 +58,7 @@ const Form = (props) => {
       formData.append("class-type", ctx.classParsing);
       formData.append("extension", ctx.extension);
 
-      const apiUrl = process.env.REACT_APP_API_URL || "";
+      const apiUrl = process.env.REACT_APP_API_URL || "https://api.epicalendar.mier.info";
       const response = await fetch(`${apiUrl}/api/generate`, {
         method: "POST",
         body: formData,
