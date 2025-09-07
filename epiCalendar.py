@@ -15,7 +15,7 @@ import connect
 import cookie
 import parse
 
-__version__ = "272"
+__version__ = "285"
 
 
 class ApplicationError(Exception):
@@ -95,7 +95,8 @@ def extract_cookies(response):
 
         if found_first and found_second and found_third: break
 
-    if 'source' not in locals():  # If the variable 'source' is not defined, the cookie was probably not valid.
+    # If the variable 'source' is not defined, the cookie was probably not valid.
+    if 'source' not in locals():
         raise BadCookieError("Invalid JSESSIONID")
 
     finalize(init)
@@ -159,12 +160,12 @@ def post_request(jsessionid, cookies, options):
             # retornar diccionario vacío si no hay ubicaciones
             finalize(init)
             return result, {}
-        
+
         loc_info = loc_info.split('<li>')[1:]
         if not loc_info:
             finalize(init)
             return result, {}
-            
+
         loc_info[-1] = loc_info[-1].split('</ul>')[0]
 
         # save each link in a dictionary.
@@ -192,14 +193,14 @@ def obtain_events(raw_response, locations, options):
             # limpiar posibles caracteres extra al final
             json_str = json_str.rsplit(']', 1)[0] + ']'
             data = json.loads(json_str)
-        except (IndexError, json.JSONDecodeError) as e:
+        except (IndexError, json.JSONDecodeError):
             finalize(init)
             return []
     elif '[{"events" : ' in raw_response:
         # formato antiguo con espacios
         try:
             data = json.loads(raw_response.split('[{"events" : ')[1].split('}]]')[0])
-        except (IndexError, json.JSONDecodeError) as e:
+        except (IndexError, json.JSONDecodeError):
             finalize(init)
             return []
     else:
@@ -211,18 +212,23 @@ def obtain_events(raw_response, locations, options):
         start = event['start'].replace('T', ' ').split('+')[0]
         end = event['end'].replace('T', ' ').split('+')[0]
         desc = event['description'].replace('\n', '')
+        class_type = event['className']
+        class_group = ''
 
         title_split = event['title'].split(" - ")
         subject = title_split[0]
         if type_parsing:
             class_type, class_group = parse.parse_class_type(title_split[1])
-        else:
-            class_type = title_split[1]
-            class_group = ''
         title = f"{subject} ({class_type}{class_group})"
 
         loc = " - ".join(desc.split(" - ")[1:])  # allow for multiple ' - ' in the description
-        code = locations[loc.lower()].split('?codEspacio=')[1] if links or loc_parsing else {}
+        code = None
+        try:
+            code = locations[loc.lower()].split('?codEspacio=')[1] if links or loc_parsing else {}
+        except Exception:
+            print("[!] Warning: failure while obtaining location code, location parsing and links will be disabled.")
+            loc_parsing = False
+            links = False
         location = parse.parse_location(loc, code) if loc_parsing else loc
         if links: desc += f" ({locations[loc.lower()]})"
 
@@ -232,33 +238,52 @@ def obtain_events(raw_response, locations, options):
     return classes
 
 
+def _generate_ics(classes, filename):
+    """generar archivo ics con los eventos del calendario"""
+    name = f"{filename}.ics"
+    c = Calendar()
+
+    # añadir cada evento al calendario
+    for event in classes:
+        c.events.add(Event(
+            name=event.title,
+            begin=event.start_raw,
+            end=event.end_raw,
+            description=event.description,
+            location=event.location,
+            uid=event.uid
+        ))
+
+    # escribir el archivo al disco
+    with open(name, "w") as f:
+        for i in c.serialize_iter():
+            if bool(re.search(r'DT((START)|(END)):', i.strip())):
+                f.write(i.replace('Z', ''))  # eliminar Z de los timestamps
+            else:
+                f.write(i)
+
+
+def _generate_csv(classes, filename):
+    """generar archivo csv con los eventos del calendario"""
+    name = f"{filename}.csv"
+
+    with open(name, "w") as f:
+        # escribir encabezados
+        f.write("Subject,Start Date,Start Time,End Date,End Time,Location,Description\n")
+
+        # escribir cada evento
+        for event in classes:
+            f.write(f"{event.title},{event.date},{event.start},{event.date},{event.end},{event.location},{event.description}\n")
+
+
 def generate_output(classes, filename, format):
     name = f"{filename}.{format}"
     init = commence(f"Generating output ({name})")
 
-    ics = format == "ics"
-
-    # Generate the output file.
-    if ics: c = Calendar()
+    if format == "ics":
+        _generate_ics(classes, filename)
     else:
-        g = open(name, "w")
-        g.write("Subject,Start Date,Start Time,End Date,End Time,Location,Description\n")
-
-    # Write each event to the file.
-    for event in classes:
-        if ics:
-            c.events.add(Event(name=event.title, begin=event.start_raw, end=event.end_raw,
-                               description=event.description, location=event.location, uid=event.uid))
-        else:
-            g.write(f"{event.title},{event.date},{event.start},{event.date},{event.end},{event.location},{event.description}\n")
-
-    # Write the file to disk.
-    if ics:
-        with open(name, "w") as f:
-            for i in c.serialize_iter():
-                if bool(re.search(r'DT((START)|(END)):', i.strip())): f.write(i.replace('Z', ''))  # remove Z from timestamps
-                else: f.write(i)
-    else: g.close()
+        _generate_csv(classes, filename)
 
     finalize(init)
 
@@ -320,31 +345,34 @@ def print_stats(classes):
         stats["days_gaps"][day] = time
 
     print("\nStatistics:")
-    print(f"\tTotal hours: {stats['hours']}h pure, {sum(stats['days_gaps'].values())}h total")
+    print(f"\tTotal hours: {stats['hours']:.2f}h pure, {sum(stats['days_gaps'].values()):.2f}h total")
     print(f"\tAttendance: {len(stats['days'])} days, {sum(stats['days_gaps'].values()) / len(stats['days']):.2f}h on average")
-    print(f"\tMax hours per day: {max(stats['days_gaps'].values())}h ({', '.join([c for c in stats['days_gaps'] if stats['days_gaps'][c] == max(stats['days_gaps'].values())])})")
-    print(f"\tFirst quarter: {stats['Q1'][0]} classes, {stats['Q1'][1]}h")
-    print(f"\tSecond quarter: {stats['Q2'][0]} classes, {stats['Q2'][1]}h")
+    max_pure_hours = max(stats['days'].values())
+    max_pure_days = [day for day in stats['days'] if stats['days'][day] == max_pure_hours]
+    print(f"\tMax pure hours per day: {max_pure_hours:.2f}h ({', '.join(max_pure_days)})")
+    print(f"\tMax hours per day (with gaps): {max(stats['days_gaps'].values()):.2f}h ({', '.join([c for c in stats['days_gaps'] if stats['days_gaps'][c] == max(stats['days_gaps'].values())])})")
+    print(f"\tFirst quarter: {stats['Q1'][0]} classes, {stats['Q1'][1]:.2f}h")
+    print(f"\tSecond quarter: {stats['Q2'][0]} classes, {stats['Q2'][1]:.2f}h")
 
     print("\n\tClass types:")
     for class_type in stats["classTypes"]:
-        print(f"\t\t{class_type[0]}: {class_type[1][0]} ({class_type[1][1]}h)")
+        print(f"\t\t{class_type[0]}: {class_type[1][0]} ({class_type[1][1]:.2f}h)")
 
     print("\n\tLocations:")
     for location in stats["locations"]:
-        print(f"\t\t{location[0]}: {location[1][0]} ({location[1][1]}h)")
+        print(f"\t\t{location[0]}: {location[1][0]} ({location[1][1]:.2f}h)")
 
     print("\n\tSubjects:")
     for subject in stats["subjects"]:
-        print(f"\t\t{subject}: {stats['subjects'][subject][0]} ({stats['subjects'][subject][1]}h)")
+        print(f"\t\t{subject}: {stats['subjects'][subject][0]} ({stats['subjects'][subject][1]:.2f}h)")
 
 
 def main(argv) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("session", metavar="JSESSIONID", help="JSESSIONID cookie value")
-    parser.add_argument("--location", choices=["on", "off"], default="off", help="enables or disables the parsing of the location of the class (default: 'off')")
+    parser.add_argument("--location", choices=["on", "off"], default="on", help="enables or disables the parsing of the location of the class (default: 'on')")
     parser.add_argument("--class-type", choices=["on", "off"], default="on", help="enables or disables the parsing of the class type of the class (default: 'on')")
-    parser.add_argument("--links", choices=["on", "off"], default="off", help="enables or disables placing links of rooms in the description of the events (default: 'off')")
+    parser.add_argument("--links", choices=["on", "off"], default="on", help="enables or disables placing links of rooms in the description of the events (default: 'on')")
     parser.add_argument("--statistics", "-s", "--stats", action="store_true", help="returns various statistics about all the events collected (default: 'off')")
     parser.add_argument("--format", choices=["csv", "ics"], default="ics", help="sets the output file format (default: 'ics')")
     parser.add_argument("--dry-run", action='store_true', help="disables the generation of files (default: 'off')")
