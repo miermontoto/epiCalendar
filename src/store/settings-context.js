@@ -8,7 +8,7 @@ const SettingsContext = createContext({
 
 	saveNameHandler: (name) => {},
 	saveas: "",
-	parse: true,
+	parse: false,
 	parseHandler: (state) => {},
 	classParsing: true,
 	classParsingHandler: (state) => {},
@@ -23,7 +23,7 @@ export const SettingsProvider = (props) => {
 
 	// States for checkboxes
 	const [update, setUpdate] = useState(false);
-	const [isCheckedParsing, setIsCheckedParsing] = useState(true);
+	const [isCheckedParsing, setIsCheckedParsing] = useState(false);
 	const [isClassParsing, setIsClassParsing] = useState(true);
 
 	// State for the extension of the file

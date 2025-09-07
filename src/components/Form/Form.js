@@ -54,8 +54,8 @@ const Form = (props) => {
       const formData = new FormData();
       formData.append("jsessionid", enteredCode);
       formData.append("filename", ctx.saveas);
-      formData.append("location", ctx.parse);
-      formData.append("class-type", ctx.classParsing);
+      formData.append("location", ctx.parse ? "true" : "false");
+      formData.append("class-type", ctx.classParsing ? "true" : "false");
       formData.append("extension", ctx.extension);
 
       const apiUrl = process.env.REACT_APP_API_URL || "https://api.epicalendar.mier.info";
