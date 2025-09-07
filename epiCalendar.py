@@ -154,8 +154,17 @@ def post_request(jsessionid, cookies, options):
         for char in chars_to_remove:
             loc_info = loc_info.replace(char, '')
 
-        print(loc_info)
+        # verificar si hay elementos <li> en la respuesta
+        if '<li>' not in loc_info:
+            # retornar diccionario vacío si no hay ubicaciones
+            finalize(init)
+            return result, {}
+        
         loc_info = loc_info.split('<li>')[1:]
+        if not loc_info:
+            finalize(init)
+            return result, {}
+            
         loc_info[-1] = loc_info[-1].split('</ul>')[0]
 
         # save each link in a dictionary.
@@ -174,7 +183,28 @@ def obtain_events(raw_response, locations, options):
     type_parsing = options['classTypeParsing']
     loc_parsing = options['locationParsing']
 
-    data = json.loads(raw_response.split('[{"events" : ')[1].split('}]]')[0])
+    # buscar eventos en la respuesta con formato correcto
+    if '{"events":[' in raw_response:
+        # formato nuevo sin espacios
+        try:
+            # extraer solo el array de eventos
+            json_str = '[' + raw_response.split('{"events":[')[1].split(']}]]></update>')[0] + ']'
+            # limpiar posibles caracteres extra al final
+            json_str = json_str.rsplit(']', 1)[0] + ']'
+            data = json.loads(json_str)
+        except (IndexError, json.JSONDecodeError) as e:
+            finalize(init)
+            return []
+    elif '[{"events" : ' in raw_response:
+        # formato antiguo con espacios
+        try:
+            data = json.loads(raw_response.split('[{"events" : ')[1].split('}]]')[0])
+        except (IndexError, json.JSONDecodeError) as e:
+            finalize(init)
+            return []
+    else:
+        finalize(init)
+        return []
     classes = []
 
     for event in data:
@@ -312,9 +342,9 @@ def print_stats(classes):
 def main(argv) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("session", metavar="JSESSIONID", help="JSESSIONID cookie value")
-    parser.add_argument("--location", choices=["on", "off"], default="on", help="enables or disables the parsing of the location of the class (default: 'on')")
+    parser.add_argument("--location", choices=["on", "off"], default="off", help="enables or disables the parsing of the location of the class (default: 'off')")
     parser.add_argument("--class-type", choices=["on", "off"], default="on", help="enables or disables the parsing of the class type of the class (default: 'on')")
-    parser.add_argument("--links", choices=["on", "off"], default="on", help="enables or disables placing links of rooms in the description of the events (default: 'on')")
+    parser.add_argument("--links", choices=["on", "off"], default="off", help="enables or disables placing links of rooms in the description of the events (default: 'off')")
     parser.add_argument("--statistics", "-s", "--stats", action="store_true", help="returns various statistics about all the events collected (default: 'off')")
     parser.add_argument("--format", choices=["csv", "ics"], default="ics", help="sets the output file format (default: 'ics')")
     parser.add_argument("--dry-run", action='store_true', help="disables the generation of files (default: 'off')")
